@@ -18,7 +18,6 @@ const { title } = Astro.props
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/x-icon" href="/favicon.png" />
     <title>{title}</title>
-    <script src="../assets/main.css"></script>
 
     <!-- Used to add dark mode right away, adding here prevents any flicker -->
     <script is:inline>
@@ -36,6 +35,65 @@ const { title } = Astro.props
       .prose img {
         border-radius: 20px;
       }
+
+      #sun {
+        transform: translate3d(0, 0px, 0);
+      }
+
+      #moon {
+        transform: translate3d(0, 0px, 0);
+      }
+
+      #darkToggle:hover #sun {
+        transform: translate3d(0, 10px, 0);
+      }
+
+      #darkToggle:hover #moon {
+        transform: translate3d(0, 10px, 0);
+      }
+
+      html.dark #darkToggle:hover .horizon {
+        border-color: #718096 !important;
+      }
+
+      .horizon .setting {
+        animation: 1s ease 0s 1 setting;
+      }
+
+      .horizon .rising {
+        animation: 1s ease 0s 1 rising;
+      }
+
+      @keyframes setting {
+        0% {
+          transform: translate3d(0, 10px, 0);
+        }
+
+        40% {
+          transform: translate3d(0, -2px, 0);
+        }
+
+        to {
+          transform: translate3d(0, 30px, 0);
+        }
+      }
+
+      @keyframes rising {
+        0% {
+          opacity: 0;
+          transform: translate3d(0, 30px, 0);
+        }
+
+        40% {
+          opacity: 1;
+          transform: translate3d(0, -2px, 0);
+        }
+
+        to {
+          opacity: 1;
+          transform: translate3d(0, 10, 0);
+        }
+      }
     </style>
     <Fragment set:html={import.meta.env.HEADER_INJECT} />
   </head>
@@ -46,7 +104,7 @@ const { title } = Astro.props
     <Header />
     <slot />
     <Footer />
-    <script src="../assets/main.js"></script>
+    <script src="../main.js"></script>
     <Fragment set:html={import.meta.env.FOOTER_INJECT} />
   </body>
 </html>
