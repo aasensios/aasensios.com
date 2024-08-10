@@ -5,5 +5,5 @@ import tailwind from '@astrojs/tailwind'
 export default defineConfig({
   integrations: [tailwind()],
   site: 'https://aasensios.github.io',
-  base: 'aasensios.com',
+  base: '/aasensios.com',
 })
