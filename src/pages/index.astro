@@ -1,11 +1,11 @@
 ---
-import { Image } from 'astro:assets'
-import Button from '../components/button.astro'
-import Projects from '../components/home/projects.astro'
-import Separator from '../components/home/separator.astro'
-import Writings from '../components/home/writings.astro'
+// import { Image } from 'astro:assets'
+// import Button from '../components/button.astro'
+// import Projects from '../components/home/projects.astro'
+// import Separator from '../components/home/separator.astro'
+// import Writings from '../components/home/writings.astro'
 import Layout from '../layouts/main.astro'
-import avatar from '../assets/images/avatar.png'
+// import avatar from '../assets/images/avatar.png'
 ---
 
 <Layout title="Alejandro">
@@ -59,8 +59,8 @@ import avatar from '../assets/images/avatar.png'
             </span>
           </div>
           <div class="relative z-30 px-10">
-            <Image
-              src={avatar}
+            <img
+              src="../assets/images/avatar.png"
               alt="AI-generated avatar"
               loading="eager"
               class="relative z-30 w-full aspect-[790/1189] md:max-w-md mx-auto dark:-translate-y-0.5"
