@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.initial.astro'
-import Card from '../components/Card.astro'
 ---
 
 <Layout title="Welcome to my website.">
@@ -40,26 +39,30 @@ import Card from '../components/Card.astro'
       webapps.
     </section>
     <ul role="list" class="link-card-grid">
-      <Card
+      <a
         href="https://www.trustyou.com/"
-        title="TrustYou"
-        body="Currently implementing the new platform in TrustYou"
-      />
-      <Card
+        title="Currently implementing the new platform in TrustYou"
+      >
+        TrustYou
+      </a>
+      <a
         href="https://github.com/aasensios"
-        title="GitHub"
-        body="Check out my projects graveyard 💀"
-      />
-      <Card
+        title="Check out my projects graveyard 💀"
+      >
+        GitHub
+      </a>
+      <a
         href="https://www.linkedin.com/in/aasensios/"
-        title="LinkedIn"
-        body="Know more about my career jorney so far 👨🏻‍💼"
-      />
-      <Card
-        href="https://example.com"
-        title="Ocikitos"
-        body="Explore the project built during my Software Degree (DAW-BIO) 🐶"
-      />
+        title="Know more about my career jorney so far 👨🏻‍💼"
+      >
+        LinkedIn
+      </a>
+      <a
+        href="https://github.com/aasensios/ocikitos"
+        title="Explore the project built during my Software Degree (DAW-BIO) 🐶"
+      >
+        Ocikitos
+      </a>
     </ul>
   </main>
 </Layout>
