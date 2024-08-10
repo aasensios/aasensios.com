@@ -1,6 +1,6 @@
 ---
-import menus from "../collections/menu.json";
-import Logo from "../components/logo.astro";
+import menus from '../collections/menu.json'
+import Logo from '../components/logo.astro'
 ---
 
 <!-- This is an invisible div with relative position so that it takes up the height of the menu (because menu is absolute/fixed) -->
@@ -19,7 +19,7 @@ import Logo from "../components/logo.astro";
     <nav
       class="relative z-30 flex flex-row-reverse justify-start w-full text-sm sm:justify-end text-neutral-500 dark:text-neutral-400 sm:flex-row"
     >
-      <div
+      <!-- <div
         id="openMenu"
         class="flex flex-col items-end justify-center w-6 h-6 ml-4 cursor-pointer sm:hidden"
       >
@@ -71,7 +71,7 @@ import Logo from "../components/logo.astro";
             )
           })
         }
-      </div>
+      </div> -->
       <div
         id="darkToggle"
         class="relative flex items-center pl-6 ml-4 font-medium tracking-wide cursor-pointer text-neutral-800 group dark:text-white"
