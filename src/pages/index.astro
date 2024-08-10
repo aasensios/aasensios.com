@@ -9,7 +9,7 @@ import avatar from '../assets/images/avatar.png'
 ---
 
 <Layout title="Alejandro">
-  <div
+  <main
     class="relative z-20 w-full max-w-4xl mx-auto mt-16 px-7 md:mt-24 lg:mt-32 xl:px-0"
   >
     <div class="flex flex-col items-center md:flex-row">
@@ -58,6 +58,7 @@ import avatar from '../assets/images/avatar.png'
             <Image
               src={avatar}
               alt="AI-generated avatar"
+              loading="eager"
               class="relative z-30 w-full aspect-[790/1189] md:max-w-md mx-auto dark:-translate-y-0.5"
             />
           </div>
@@ -68,7 +69,7 @@ import avatar from '../assets/images/avatar.png'
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
   <!-- <Separator text="Check out my projects" />
   <Projects />
