@@ -1,6 +1,7 @@
 ---
 import navItems from '../collections/nav-items.json'
 import Logo from '../components/logo.astro'
+import ThemeIcon from './theme-icon.astro'
 ---
 
 <!-- This is an invisible div with relative position so that it takes up the height of the menu (because menu is absolute/fixed) -->
@@ -73,7 +74,8 @@ import Logo from '../components/logo.astro'
         }
       </div>
     </nav>
-    <div
+    <ThemeIcon />
+    <!-- <div
       id="darkToggle"
       class="relative flex items-center pl-6 ml-4 font-semibold cursor-pointer text-neutral-800 group dark:text-white"
     >
@@ -112,6 +114,6 @@ import Logo from '../components/logo.astro'
         <span id="dayText">Day mode</span>
         <span id="nightText" class="hidden">Night mode</span>
       </span>
-    </div>
+    </div> -->
   </div>
 </header>
