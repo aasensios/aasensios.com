@@ -1,46 +1,29 @@
 ---
-import { Image } from 'astro:assets'
-import avatar from '../assets/anime-avatar.webp'
 import Layout from '../layouts/index.astro'
 ---
 
-<Layout title="Alejandro">
-  <main class="w-full max-w-3xl mx-auto mt-16 px-7 md:mt-24 lg:mt-32 lg:px-0">
-    <div class="md:grid md:grid-cols-2 items-center gap-10">
-      <div>
-        <h1
-          class="mb-5 text-4xl font-bold leading-tight md:text-4xl lg:text-6xl dark:text-white"
-        >
-          Hello, I'm Alejandro.
-        </h1>
-        <p class="mb-16 text-base text-neutral-700 dark:text-neutral-300">
-          I'm a front-end web developer from Barcelona.
-          <br class="hidden md:block" />
-          I focus on user experience and accessibility.
-        </p>
-        <p class="mb-6 text-base text-neutral-700 dark:text-neutral-300">
-          Currently, I'm building the front-end of the new Platform for
-          hospitality businesses at <a
-            href="https://www.trustyou.com/"
-            class="hover:text-black dark:hover:text-white">TrustYou</a
-          >.
-        </p>
-        <p class="mb-6 text-base text-neutral-700 dark:text-neutral-300">
-          To grab an idea of my previous work, check out my <a
-            href="https://www.linkedin.com/in/aasensios/"
-            class="hover:text-black dark:hover:text-white">LinkedIn</a
-          > and my <a
-            href="https://github.com/aasensios"
-            class="hover:text-black dark:hover:text-white">GitHub</a
-          >.
-        </p>
-      </div>
-      <Image
-        src={avatar}
-        alt="AI-generated avatar"
-        loading="eager"
-        class="w-full max-w-sm border border-dashed [border-top-style-inset] border-neutral-300 dark:from-neutral-950 dark:via-black dark:to-transparent dark:border-neutral-700 rounded-2xl"
-      />
-    </div>
+<Layout title="Alejandro Asensio">
+  <main class="w-full max-w-[63ch] mx-auto">
+    <p class="text-subtext1">Hey, Alejandro here, from Barcelona.</p>
+    <h1 class="text-4xl leading-none font-semibold">
+      I'm a front-end web developer who cares about visual consistency and
+      <span
+        class="bg-gradient-to-r from-red to-blue bg-clip-text text-transparent font-bold"
+        >user experience</span
+      >.
+    </h1>
+    <p class="text-subtext1">
+      Currently, I'm building the front-end of the new Platform for hospitality
+      businesses at
+      <a href="https://www.trustyou.com/" class="hover:text-teal">TrustYou</a>.
+    </p>
+    <p class="text-subtext1">
+      To grab an idea of my previous work, check out my <a
+        href="https://www.linkedin.com/in/aasensios/"
+        class="hover:text-teal">LinkedIn</a
+      > and my <a href="https://github.com/aasensios" class="hover:text-teal"
+        >GitHub</a
+      >.
+    </p>
   </main>
 </Layout>

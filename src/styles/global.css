@@ -1,17 +1,13 @@
-html.dark {
-  background-color: #0d0950;
-  color: #fff;
-}
-
-.dark .nav-links a {
-  color: #fff;
-}
-
 a {
   text-decoration: underline;
   text-underline-offset: 3px;
+  font-weight: 500;
 }
 
-.prose img {
-  border-radius: 20px;
+h1 {
+  margin-block: 3rem;
+}
+
+p {
+  margin-block: 1rem;
 }

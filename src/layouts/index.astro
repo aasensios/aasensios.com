@@ -1,7 +1,6 @@
 ---
 import Footer from '../components/footer.astro'
 import Header from '../components/header.astro'
-import SquareLines from '../components/square-lines.astro'
 import '../styles/global.css'
 
 interface Props {
@@ -17,18 +16,15 @@ const { title } = Astro.props
     <meta charset="UTF-8" />
     <meta name="description" content="My personal website" />
     <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/x-icon" href="/aasensios.com/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/aasensios.com/favicon.svg" />
     <title>{title}</title>
-    <Fragment set:html={import.meta.env.HEADER_INJECT} />
+    <script is:inline src="/src/scripts/theme.js" defer></script>
   </head>
   <body
-    class="h-screen grid grid-rows-[auto_1fr_auto] antialiased bg-neutral-50 dark:bg-neutral-950"
+    class="bg-base text-text h-screen grid grid-rows-[auto_1fr_auto] gap-y-10 antialiased p-4"
   >
-    <SquareLines />
     <Header />
     <slot />
     <Footer />
-    <script src="../main.js"></script>
-    <Fragment set:html={import.meta.env.FOOTER_INJECT} />
   </body>
 </html>
