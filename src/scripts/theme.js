@@ -1,10 +1,9 @@
-function applyTheme(theme) {
+function applyTheme(isDarkMode) {
 	document.body.classList.remove("latte", "mocha");
-	document.body.classList.add(theme);
+	document.body.classList.add(isDarkMode ? "mocha" : "latte");
 }
 
-function applyFavicon() {
-	const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+function applyFavicon(isDarkMode) {
 	const favicon = document.getElementById("favicon");
 	if (isDarkMode) {
 		favicon.setAttribute("href", "/favicon-dark.svg");
@@ -13,25 +12,16 @@ function applyFavicon() {
 	}
 }
 
-function detectColorScheme() {
+document.addEventListener("DOMContentLoaded", () => {
 	const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
-	applyTheme(isDarkMode ? "mocha" : "latte");
-	applyFavicon();
-}
+	applyTheme(isDarkMode);
+	applyFavicon(isDarkMode);
+});
 
-// Listen for changes to the color scheme
 window
 	.matchMedia("(prefers-color-scheme: dark)")
 	.addEventListener("change", (event) => {
-		const newColorScheme = event.matches ? "mocha" : "latte";
-		applyTheme(newColorScheme);
-		applyFavicon();
+		const isDarkTheme = event.matches;
+		applyTheme(isDarkTheme);
+		applyFavicon(isDarkTheme);
 	});
-
-// Initial detection of color scheme
-document.addEventListener("DOMContentLoaded", detectColorScheme);
-
-// Listen for changes in color scheme
-window
-	.matchMedia("(prefers-color-scheme: dark)")
-	.addEventListener("change", applyFavicon);
