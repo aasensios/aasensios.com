@@ -1,28 +1,35 @@
 ---
-import Layout from '../layouts/index.astro'
+import Layout from '../layouts/layout.astro'
 ---
 
 <Layout title="Alejandro Asensio">
-  <main class="w-full max-w-[63ch] mx-auto">
+  <main>
     <p class="text-subtext1">Hey, Alejandro here, from Barcelona.</p>
-    <h1 class="text-4xl leading-none font-semibold">
-      I'm a front-end web developer who cares about visual consistency and
+    <h1 class="text-4xl md:text-5xl leading-none font-bold mb-16">
+      I'm a front-end web developer who cares about <span
+        class="bg-gradient-to-r from-flamingo via-pink to-mauve bg-clip-text text-transparent"
+        >visual consistency</span
+      > and
       <span
-        class="bg-gradient-to-r from-red to-blue bg-clip-text text-transparent font-bold"
+        class="bg-gradient-to-r from-teal via-sky to-sapphire bg-clip-text text-transparent"
         >user experience</span
       >.
     </h1>
     <p class="text-subtext1">
-      Currently, I'm building the front-end of the new Platform for hospitality
+      Currently, I'm building the front-end of the new platform for hospitality
       businesses at
-      <a href="https://www.trustyou.com/" class="hover:text-teal">TrustYou</a>.
+      <a
+        href="https://www.trustyou.com/"
+        class="hover:text-peach hover:transition hover:duration-300">TrustYou</a
+      >.
     </p>
     <p class="text-subtext1">
       To grab an idea of my previous work, check out my <a
         href="https://www.linkedin.com/in/aasensios/"
-        class="hover:text-teal">LinkedIn</a
-      > and my <a href="https://github.com/aasensios" class="hover:text-teal"
-        >GitHub</a
+        class="hover:text-blue hover:transition hover:duration-300">LinkedIn</a
+      > and my <a
+        href="https://github.com/aasensios"
+        class="hover:text-white hover:transition hover:duration-300">GitHub</a
       >.
     </p>
   </main>
