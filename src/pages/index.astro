@@ -3,9 +3,8 @@ import Layout from '../layouts/layout.astro'
 ---
 
 <Layout title="Alejandro Asensio">
-  <main>
-    <p class="text-subtext1">Hey, Alejandro here, from Barcelona.</p>
-    <h1 class="text-4xl md:text-5xl leading-none font-bold mb-16">
+  <main class="flex flex-col gap-8">
+    <!-- <h1 class="text-4xl md:text-5xl leading-none font-bold mb-16">
       I'm a front-end web developer who cares about <span
         class="bg-gradient-to-r from-flamingo via-pink to-mauve bg-clip-text text-transparent"
         >visual consistency</span
@@ -14,22 +13,25 @@ import Layout from '../layouts/layout.astro'
         class="bg-gradient-to-r from-teal via-sky to-sapphire bg-clip-text text-transparent"
         >user experience</span
       >.
+    </h1> -->
+    <h1 class="font-serif text-2xl">
+      <span class="text-text leading-relaxed">
+        Alejandro Asensio.
+      </span>
+      Frontend Engineer at <em class="text-text">TrustYou</em>,
+      focussing on visual consistency & user experience.
     </h1>
-    <p class="text-subtext1">
-      Currently, I'm building the front-end of the new platform for hospitality
-      businesses at
+    <p>
+      Building the revamped web platform for hospitality businesses at
       <a
         href="https://www.trustyou.com/"
-        class="hover:text-peach hover:transition hover:duration-300">TrustYou</a
-      >.
-    </p>
-    <p class="text-subtext1">
-      To grab an idea of my previous work, check out my <a
+        class="hover:text-peach hover:transition hover:duration-300">
+        trustyou.com</a>. To grab an idea of my previous work, check out my <a
         href="https://www.linkedin.com/in/aasensios/"
         class="hover:text-blue hover:transition hover:duration-300">LinkedIn</a
       > and my <a
         href="https://github.com/aasensios"
-        class="hover:text-white hover:transition hover:duration-300">GitHub</a
+        class="hover:text-green hover:transition hover:duration-300">GitHub</a
       >.
     </p>
   </main>
