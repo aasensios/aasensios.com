@@ -1,9 +1,9 @@
 a {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-thickness: from-font;
-  color: black;
-  @media (prefers-color-scheme: dark) {
-    color: white;
-  }
+	text-decoration: underline;
+	text-underline-offset: 4px;
+	text-decoration-thickness: from-font;
+	color: black;
+	@media (prefers-color-scheme: dark) {
+		color: white;
+	}
 }

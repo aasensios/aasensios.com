@@ -1,23 +1,23 @@
 {
-  "name": "aasensios.com",
-  "type": "module",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
-    "build": "astro check && astro build",
-    "preview": "astro preview",
-    "check": "biome check --apply-unsafe ."
-  },
-  "devDependencies": {
-    "@astrojs/check": "0.9.3",
-    "@astrojs/tailwind": "5.1.0",
-    "@biomejs/biome": "1.8.3",
-    "@catppuccin/tailwindcss": "0.1.6",
-    "@tailwindcss/typography": "0.5.15",
-    "astro": "4.15.1",
-    "sharp": "0.33.5",
-    "tailwindcss": "3.4.10",
-    "typescript": "5.5.4"
-  }
+	"name": "aasensios.com",
+	"type": "module",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "astro dev",
+		"start": "astro dev",
+		"build": "astro check && astro build",
+		"preview": "astro preview",
+		"check": "biome check --write --unsafe ."
+	},
+	"devDependencies": {
+		"@astrojs/check": "0.9.3",
+		"@astrojs/tailwind": "5.1.0",
+		"@biomejs/biome": "1.9.4",
+		"@catppuccin/tailwindcss": "0.1.6",
+		"@tailwindcss/typography": "0.5.15",
+		"astro": "4.15.1",
+		"sharp": "0.33.5",
+		"tailwindcss": "3.4.10",
+		"typescript": "5.5.4"
+	}
 }
