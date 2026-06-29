@@ -1,9 +1,12 @@
+@import "tailwindcss";
+@import "@catppuccin/tailwindcss/mocha.css";
+
 a {
-	text-decoration: underline;
-	text-underline-offset: 4px;
-	text-decoration-thickness: from-font;
-	color: black;
-	@media (prefers-color-scheme: dark) {
-		color: white;
-	}
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+  color: black;
+  @media (prefers-color-scheme: dark) {
+    color: white;
+  }
 }
