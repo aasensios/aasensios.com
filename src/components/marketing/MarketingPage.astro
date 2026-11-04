@@ -1,0 +1,417 @@
+---
+import StyleToggle from "@components/StyleToggle.astro";
+import { experienceLabel, site } from "../../content/site";
+import { formatPeriod, toYearMonth, yearsSince } from "../../lib/dates";
+
+const now = toYearMonth(new Date());
+const copy = site.copy.marketing;
+const linkedin = site.links.find((l) => l.label === "LinkedIn")!;
+const [line1, highlight, line3] = copy.headline;
+---
+
+<div class="mk">
+  <header class="bar">
+    <div class="inner">
+      <span class="name">{site.name}</span>
+      <StyleToggle variant="marketing" />
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-main">
+        <div class="h1wrap">
+          <h1>
+            <span>{line1}</span>
+            <span class="hl">{highlight}</span>
+            <span>{line3}</span>
+          </h1>
+          <p class="sticker">{yearsSince(site.firstJobStart, now)} {copy.sticker}</p>
+        </div>
+        <p class="lead">{copy.lead}</p>
+        <div class="ctas">
+          <a class="btn btn--primary" href="#marketing-projects">{copy.primaryCta}</a>
+          <a class="btn btn--secondary" href={linkedin.href}>{copy.secondaryCta}</a>
+        </div>
+      </div>
+      <ul class="stats">
+        {
+          copy.stats.map((s) => (
+            <li>
+              <b>{s.value}</b>
+              <span>{s.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="tools">
+      <h2>{copy.sections.stack}</h2>
+      <ul class="stack">{site.stack.map((t) => <li>{t.name}</li>)}</ul>
+    </section>
+
+    <div class="two">
+      <section>
+        <h2>{copy.sections.experience}</h2>
+        <ul class="list">
+          {
+            site.experience.map((e) => (
+              <li class="row">
+                <span>{experienceLabel(e)}</span>
+                <span class="meta">{formatPeriod(e.start, e.end, now)}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+      <section id="marketing-projects">
+        <h2>{copy.sections.projects}</h2>
+        <ul class="list">
+          {
+            site.projects.map((p) => (
+              <li>
+                <a class="row" href={p.repo}>
+                  <span>{p.title}</span>
+                  <span class="meta">{p.language}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </div>
+
+    <footer class="links">
+      {site.links.map((l) => <a href={l.href}>{l.label}</a>)}
+    </footer>
+  </main>
+</div>
+
+<style>
+  .mk {
+    /* Color roles: blue = clickable, pink = personality, green = proof. */
+    --bg: #fbf8f3;
+    --ink: #111;
+    --line: #111;
+    --surface: #fff;
+    --blue: #3b5bff;
+    --blue-text: #3b5bff;
+    --pink: #ff4fa3;
+    --green: #22c55e;
+    --on-accent: #111;
+    --chip: #ebe6dc;
+    --display: "Arial Black", "Helvetica Neue", Arial, system-ui, sans-serif;
+
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .mk {
+      --bg: #15131b;
+      --ink: #f5f2ea;
+      --line: #f5f2ea;
+      --surface: #1f1c27;
+      --blue: #6b85ff;
+      --blue-text: #8ea0ff;
+      --pink: #ff6fb5;
+      --green: #34d399;
+      --on-accent: #15131b;
+      --chip: #2b2734;
+    }
+  }
+
+  .mk a {
+    color: inherit;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Top bar */
+  .bar {
+    border-bottom: 3px solid var(--line);
+  }
+  .bar .inner,
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding-inline: 16px;
+  }
+  .bar .inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-block: 14px;
+  }
+  .name {
+    font-weight: 800;
+    font-size: 16px;
+  }
+  .mk :global(.style-toggle) {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--ink);
+  }
+  .mk :global(.style-toggle button) {
+    border: 0;
+    background: transparent;
+    color: var(--bg);
+    font: 700 12px/1.4 system-ui, sans-serif;
+    padding: 3px 9px;
+  }
+  .mk :global(.style-toggle button[aria-pressed="true"]) {
+    background: var(--blue);
+    color: #fff;
+  }
+  .mk :global(.style-toggle button:focus-visible) {
+    outline: 2px solid var(--pink);
+    outline-offset: 2px;
+  }
+
+  /* Hero */
+  .wrap {
+    padding-block: 32px 40px;
+  }
+  .hero {
+    display: grid;
+    gap: 32px;
+  }
+  .h1wrap {
+    position: relative;
+    font-size: clamp(2rem, 10vw, 4.25rem);
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1em;
+    line-height: 1;
+    letter-spacing: -0.045em;
+    text-transform: uppercase;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15em;
+  }
+  .hl {
+    background: var(--pink);
+    color: var(--on-accent);
+    padding: 0 0.15em;
+    margin-left: -0.15em;
+    transform: rotate(-2deg);
+  }
+  /* Sized in ems of its own 0.22em font so it scales with the headline. */
+  .sticker {
+    position: absolute;
+    font-size: 0.22em;
+    left: 22em;
+    bottom: 0.55em;
+    width: 6.95em;
+    height: 6.95em;
+    margin: 0;
+    padding: 0 0.6em;
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    line-height: 1.05;
+    background: var(--pink);
+    color: var(--on-accent);
+    border: 3px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 4px 4px 0 var(--line);
+    transform: rotate(12deg);
+    font-family: var(--display);
+  }
+  .lead {
+    font-weight: 600;
+    font-size: 17px;
+    margin: 32px 0 0;
+    max-width: 34em;
+  }
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .btn {
+    padding: 11px 18px;
+    border: 3px solid var(--line);
+    font-weight: 800;
+    font-size: 15px;
+    text-decoration: none;
+    box-shadow: 5px 5px 0 var(--line);
+  }
+  .btn--primary {
+    background: var(--blue);
+    color: #fff !important;
+  }
+  .btn--secondary {
+    background: var(--surface);
+    color: var(--blue-text) !important;
+  }
+  .btn:active {
+    box-shadow: 2px 2px 0 var(--line);
+    translate: 3px 3px;
+  }
+  .stats {
+    display: grid;
+    gap: 14px;
+  }
+  .stats li {
+    border: 3px solid var(--line);
+    box-shadow: 5px 5px 0 var(--line);
+    background: var(--green);
+    color: var(--on-accent);
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    align-items: center;
+    gap: 12px;
+  }
+  .stats b {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .stats span {
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  /* Sections */
+  h2 {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 21px;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    margin: 0 0 14px;
+  }
+  .tools {
+    margin-top: 48px;
+  }
+  .stack {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .stack li {
+    background: var(--chip);
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+  }
+  .two {
+    display: grid;
+    gap: 40px;
+    margin-top: 48px;
+  }
+  .list {
+    border: 3px solid var(--line);
+    background: var(--surface);
+    box-shadow: 5px 5px 0 var(--line);
+    font-weight: 600;
+  }
+  .list > li + li {
+    border-top: 2px solid var(--line);
+  }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 14px;
+    text-decoration: none;
+  }
+  a.row:hover span:first-child {
+    color: var(--blue-text);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+  .meta {
+    white-space: nowrap;
+  }
+
+  /* Links */
+  .links {
+    display: flex;
+    gap: 24px;
+    margin-top: 48px;
+    padding-top: 22px;
+    border-top: 3px solid var(--line);
+    font-weight: 800;
+    font-size: 17px;
+  }
+  .links a {
+    color: var(--blue-text);
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 5px;
+  }
+
+  @media (min-width: 640px) {
+    .stack {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .bar .inner,
+    .wrap {
+      padding-inline: 32px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .bar .inner,
+    .wrap {
+      padding-inline: 48px;
+    }
+    .wrap {
+      padding-block: 48px 40px;
+    }
+    .hero {
+      grid-template-columns: 1.75fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    .lead {
+      font-size: 18px;
+      margin-top: 44px;
+    }
+    .stats li {
+      grid-template-columns: 110px 1fr;
+      padding: 14px 18px;
+    }
+    .stats b {
+      font-size: 38px;
+    }
+    .tools {
+      margin-top: 56px;
+    }
+    .two {
+      grid-template-columns: 1.3fr 1fr;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .row {
+      flex-direction: column;
+      gap: 2px;
+    }
+  }
+</style>

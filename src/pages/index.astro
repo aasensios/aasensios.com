@@ -1,6 +1,7 @@
 ---
 import StyleToggle from "@components/StyleToggle.astro";
 import Layout from "@layouts/layout.astro";
+import MarketingPage from "@components/marketing/MarketingPage.astro";
 import { site } from "../content/site";
 ---
 
@@ -9,8 +10,7 @@ import { site } from "../content/site";
   description="Frontend-focused product engineer. I build web products where every screen has an obvious next action."
 >
   <div data-style-panel="marketing">
-    <StyleToggle variant="marketing" />
-    <h1>Marketing</h1>
+    <MarketingPage />
   </div>
   <div data-style-panel="saas">
     <StyleToggle variant="saas" />
