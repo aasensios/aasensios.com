@@ -12,6 +12,10 @@ function applyStyle(style: StyleId) {
   root.dataset.style = style;
   syncPressed(style);
   writeStoredStyle(() => window.localStorage, style);
+  // The clicked button's panel is now hidden; keep keyboard focus on the same option in the new one.
+  document
+    .querySelector<HTMLButtonElement>(`[data-style-panel="${style}"] [data-set-style="${style}"]`)
+    ?.focus();
 }
 
 document.addEventListener("click", (event) => {

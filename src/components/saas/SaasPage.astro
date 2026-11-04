@@ -5,7 +5,7 @@ import Dna from "@components/illustrations/dna.astro";
 import Forms from "@components/illustrations/forms.astro";
 import Gmail from "@components/illustrations/gmail.astro";
 import { site } from "../../content/site";
-import { toYearMonth } from "../../lib/dates";
+import { toYearMonth, yearsSince } from "../../lib/dates";
 import ExperienceTimeline from "./ExperienceTimeline.astro";
 
 const now = toYearMonth(new Date());
@@ -28,7 +28,7 @@ const illustrations = { forms: Forms, gmail: Gmail, blog: Blog, dna: Dna };
     <section class="sec intro">
       <h1>{copy.headline}</h1>
       <p class="muted">{copy.subline}</p>
-      <p class="text">{copy.intro}</p>
+      <p class="text">{copy.intro(yearsSince(site.firstJobStart, now))}</p>
     </section>
 
     <section class="sec">

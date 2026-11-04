@@ -97,6 +97,7 @@ const [line1, highlight, line3] = copy.headline;
     --surface: #fff;
     --blue: #3b5bff;
     --blue-text: #3b5bff;
+    --on-blue: #fff;
     --pink: #ff4fa3;
     --green: #22c55e;
     --on-accent: #111;
@@ -119,6 +120,7 @@ const [line1, highlight, line3] = copy.headline;
       --surface: #1f1c27;
       --blue: #6b85ff;
       --blue-text: #8ea0ff;
+      --on-blue: #15131b;
       --pink: #ff6fb5;
       --green: #34d399;
       --on-accent: #15131b;
@@ -172,7 +174,7 @@ const [line1, highlight, line3] = copy.headline;
   }
   .mk :global(.style-toggle button[aria-pressed="true"]) {
     background: var(--blue);
-    color: #fff;
+    color: var(--on-blue);
   }
   .mk :global(.style-toggle button:focus-visible) {
     outline: 2px solid var(--pink);
@@ -256,7 +258,7 @@ const [line1, highlight, line3] = copy.headline;
   }
   .btn--primary {
     background: var(--blue);
-    color: #fff !important;
+    color: var(--on-blue) !important;
   }
   .btn--secondary {
     background: var(--surface);

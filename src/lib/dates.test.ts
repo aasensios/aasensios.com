@@ -44,4 +44,8 @@ describe("yearsSince", () => {
     expect(yearsSince({ year: 2019, month: 6 }, now)).toBe(7);
     expect(yearsSince({ year: 2019, month: 6 }, { year: 2026, month: 4 })).toBe(6);
   });
+  it("counts whole elapsed years, flipping only on the anniversary month", () => {
+    expect(yearsSince({ year: 2019, month: 6 }, { year: 2027, month: 5 })).toBe(7);
+    expect(yearsSince({ year: 2019, month: 6 }, { year: 2027, month: 6 })).toBe(8);
+  });
 });

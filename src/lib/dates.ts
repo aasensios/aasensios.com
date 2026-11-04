@@ -26,9 +26,9 @@ export function formatPeriod(start: YearMonth, end: YearMonth | null, now: YearM
   return `${formatYearRange(start, end)} ${MIDDLE_DOT} ${formatDuration(monthsBetween(start, end ?? now))}`;
 }
 
-/** Whole years elapsed since `start`, rounded down. */
+/** Whole years elapsed since `start`, rounded down; it flips on the anniversary month. */
 export function yearsSince(start: YearMonth, now: YearMonth): number {
-  return Math.floor(monthsBetween(start, now) / 12);
+  return Math.floor((monthsBetween(start, now) - 1) / 12);
 }
 
 export function toYearMonth(date: Date): YearMonth {

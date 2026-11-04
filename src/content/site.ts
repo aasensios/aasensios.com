@@ -170,8 +170,8 @@ export const site = {
     saas: {
       headline: "Frontend-focused product engineer",
       subline: "Product Engineer at TrustYou · Barcelona, remote",
-      intro:
-        "7 years building React and TypeScript products across research, automotive, retail and hospitality. I own features end to end, keep codebases healthy, and design flows where every screen has a clear next action. Currently rebuilding the customer experience platform at TrustYou.",
+      intro: (years: number) =>
+        `${years} years building React and TypeScript products across research, automotive, retail and hospitality. I own features end to end, keep codebases healthy, and design flows where every screen has a clear next action. Currently rebuilding the customer experience platform at TrustYou.`,
       sections: {
         experience: "Experience",
         stack: "Stack",

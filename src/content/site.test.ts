@@ -45,6 +45,10 @@ describe("site content", () => {
     expect(starts).toEqual([...starts].sort((a, b) => b - a));
   });
 
+  it("computes the years in the SaaS intro instead of hardcoding them", () => {
+    expect(site.copy.saas.intro(8).startsWith("8 years building")).toBe(true);
+  });
+
   it("contains no em dashes or email links", () => {
     const json = JSON.stringify(site);
     expect(json).not.toContain("—");
