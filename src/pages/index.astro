@@ -2,6 +2,7 @@
 import StyleToggle from "@components/StyleToggle.astro";
 import Layout from "@layouts/layout.astro";
 import MarketingPage from "@components/marketing/MarketingPage.astro";
+import SaasPage from "@components/saas/SaasPage.astro";
 import { site } from "../content/site";
 ---
 
@@ -13,8 +14,7 @@ import { site } from "../content/site";
     <MarketingPage />
   </div>
   <div data-style-panel="saas">
-    <StyleToggle variant="saas" />
-    <h1>SaaS</h1>
+    <SaasPage />
   </div>
   <div data-style-panel="minimalist">
     <StyleToggle variant="minimalist" />

@@ -8,6 +8,8 @@ export type Experience = {
   /** `null` means present. */
   end: YearMonth | null;
   icon: string;
+  /** Zoom for icons with built-in padding, so all company icons look the same size. */
+  iconScale?: number;
   color: string;
   colorDark?: string;
 };
@@ -69,6 +71,7 @@ export const site = {
       start: { year: 2021, month: 6 },
       end: { year: 2021, month: 11 },
       icon: "/logos/capitole.png",
+      iconScale: 1.45,
       color: "#1c3aa0",
       colorDark: "#5b7cf0",
     },
@@ -91,7 +94,7 @@ export const site = {
     tool("shadcn/ui", "shadcnui", true),
     tool("Astro", "astro", true),
     tool("Vite+", "vite"),
-    tool("Nx", "nx"),
+    tool("Nx", "nx", true),
     tool("pnpm", "pnpm"),
     tool("Playwright", "playwright"),
     tool("Storybook", "storybook"),
