@@ -1,8 +1,8 @@
 ---
-import StyleToggle from "@components/StyleToggle.astro";
 import Layout from "@layouts/layout.astro";
 import MarketingPage from "@components/marketing/MarketingPage.astro";
 import SaasPage from "@components/saas/SaasPage.astro";
+import MinimalistPage from "@components/minimalist/MinimalistPage.astro";
 import { site } from "../content/site";
 ---
 
@@ -17,7 +17,6 @@ import { site } from "../content/site";
     <SaasPage />
   </div>
   <div data-style-panel="minimalist">
-    <StyleToggle variant="minimalist" />
-    <h1>Minimalist</h1>
+    <MinimalistPage />
   </div>
 </Layout>
