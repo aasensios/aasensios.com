@@ -1,0 +1,25 @@
+---
+import { DEFAULT_STYLE, STYLE_LABELS, STYLES, type StyleId } from "../lib/style";
+
+interface Props {
+  /** Which style's look this toggle instance takes. */
+  variant: StyleId;
+  class?: string;
+}
+
+const { variant, class: className } = Astro.props;
+---
+
+<div
+  class:list={["style-toggle", `style-toggle--${variant}`, className]}
+  role="group"
+  aria-label="Page style"
+>
+  {
+    STYLES.map((id) => (
+      <button type="button" data-set-style={id} aria-pressed={id === DEFAULT_STYLE ? "true" : "false"}>
+        {STYLE_LABELS[id]}
+      </button>
+    ))
+  }
+</div>

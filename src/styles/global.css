@@ -1,1 +1,29 @@
 @import "tailwindcss";
+
+/*
+ * One panel per style. Only the active one is displayed, which also removes the others from the
+ * accessibility tree. Without JavaScript there is no data-style, so Marketing shows.
+ */
+[data-style-panel] {
+  display: none;
+}
+
+html:not([data-style]) [data-style-panel="marketing"],
+html[data-style="marketing"] [data-style-panel="marketing"],
+html[data-style="saas"] [data-style-panel="saas"],
+html[data-style="minimalist"] [data-style-panel="minimalist"] {
+  display: block;
+}
+
+/* The toggle only works with JavaScript, so it only appears with it. */
+html:not(.js) .style-toggle {
+  display: none !important;
+}
+
+.style-toggle button {
+  cursor: pointer;
+}
+
+body {
+  margin: 0;
+}

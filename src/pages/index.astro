@@ -1,7 +1,23 @@
 ---
+import StyleToggle from "@components/StyleToggle.astro";
 import Layout from "@layouts/layout.astro";
+import { site } from "../content/site";
 ---
 
-<Layout title="Alejandro Asensio">
-  <main></main>
+<Layout
+  title={site.name}
+  description="Frontend-focused product engineer. I build web products where every screen has an obvious next action."
+>
+  <div data-style-panel="marketing">
+    <StyleToggle variant="marketing" />
+    <h1>Marketing</h1>
+  </div>
+  <div data-style-panel="saas">
+    <StyleToggle variant="saas" />
+    <h1>SaaS</h1>
+  </div>
+  <div data-style-panel="minimalist">
+    <StyleToggle variant="minimalist" />
+    <h1>Minimalist</h1>
+  </div>
 </Layout>
