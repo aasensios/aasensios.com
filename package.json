@@ -10,15 +10,15 @@
     "prepare": "vp config"
   },
   "dependencies": {
-    "@astrojs/check": "0.9.9",
-    "@tailwindcss/vite": "4.3.2"
+    "@astrojs/check": "0.9.12",
+    "@tailwindcss/vite": "4.3.4"
   },
   "devDependencies": {
     "@catppuccin/tailwindcss": "1.0.0",
-    "astro": "7.0.3",
-    "tailwindcss": "4.3.2",
+    "astro": "7.4.5",
+    "tailwindcss": "4.3.4",
     "typescript": "6.0.3",
-    "vite": "6.4.3",
+    "vite": "catalog:",
     "vite-plus": "catalog:"
   },
   "devEngines": {

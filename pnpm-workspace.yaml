@@ -2,9 +2,9 @@ allowBuilds:
   esbuild: true
   sharp: true
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@latest
-  vitest: 4.1.9
-  vite-plus: latest
+  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+  vitest: 5.0.5
+  vite-plus: 1.4.0
 minimumReleaseAgeExclude:
   - "@tailwindcss/node@4.3.2"
   - "@tailwindcss/oxide-android-arm64@4.3.2"
