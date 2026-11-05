@@ -106,8 +106,7 @@ export const site = {
     ],
     facts: (years: number) =>
       `I've been shipping software for more than ${years} years now. Based in Barcelona, working fully remote.`,
-    colorScheme:
-      "No theme switch on purpose: this site follows your browser's light or dark setting.",
+    colorScheme: "This site adapts to your dark or light mode preference.",
     footer: [
       { label: "Made with", link: { label: "Astro", href: "https://astro.build/" } },
       {

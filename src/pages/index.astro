@@ -31,7 +31,6 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
           densities={[1, 2]}
           loading="eager"
         />
-        <span class="name">{site.name}</span>
         <span class="scheme">
           <button type="button" aria-label="Light and dark mode" aria-describedby="scheme-tip">
             <svg class="sun" viewBox="0 0 24 24" aria-hidden="true">
@@ -49,6 +48,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
       </header>
 
       <main>
+        <p class="byline">{site.name}</p>
         <h1>{copy.headline}</h1>
         {copy.intro.map((p) => <p>{p}</p>)}
         <p>{copy.facts(years)}</p>
@@ -197,7 +197,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     font-weight: 400;
     font-synthesis: none;
     font-size: 16px;
-    line-height: 24px;
+    line-height: 26px;
   }
   @media (prefers-color-scheme: dark) {
     .mn {
@@ -235,14 +235,17 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
 
   h1 {
     font-size: 32px;
-    line-height: 40px;
+    line-height: 42px;
     font-weight: 700;
     font-variation-settings: "opsz" 25;
-    margin: 48px 0 0;
+    margin: 4px 0 0;
+  }
+  .byline {
+    margin-top: 48px;
   }
   h2 {
     font-size: 20px;
-    line-height: 28px;
+    line-height: 30px;
     font-weight: 550;
     font-variation-settings: "opsz" 18;
     margin: 0;
@@ -361,7 +364,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     border-radius: 8px;
     background: var(--bg);
     font-size: 14px;
-    line-height: 20px;
+    line-height: 22px;
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
@@ -380,7 +383,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     align-items: center;
     color: var(--muted);
     font-size: 12px;
-    line-height: 16px;
+    line-height: 18px;
     font-variant-numeric: tabular-nums;
     text-align: center;
   }
@@ -457,7 +460,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     background: var(--bg);
     color: var(--fg);
     font-size: 14px;
-    line-height: 20px;
+    line-height: 22px;
     visibility: hidden;
     opacity: 0;
     transition:
@@ -474,7 +477,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     margin-top: 48px;
     color: var(--muted);
     font-size: 14px;
-    line-height: 20px;
+    line-height: 22px;
   }
   .title a,
   a.row .title,
@@ -506,7 +509,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
   .meta {
     color: var(--muted);
     font-size: 14px;
-    line-height: 20px;
+    line-height: 22px;
     white-space: nowrap;
   }
   .links {
