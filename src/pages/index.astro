@@ -19,7 +19,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
   title={site.name}
   description="Frontend-focused product engineer. I make screens you can leave: the best interfaces get you what you need, then let you go."
 >
-  <div class="mn">
+  <div class="page">
     <div class="wrap">
       <header class="head">
         <Image
@@ -100,7 +100,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
                   return (
                     <li
                       class="lane"
-                      style={`--left:${left}%;--width:${width}%;--c:${e.color};--cd:${e.colorDark ?? e.color}`}
+                      style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color}`}
                     >
                       <span class="logo">
                         <Image
@@ -183,97 +183,152 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
 </Layout>
 
 <style>
-  .mn {
-    --bg: #fdfcfa;
-    --fg: #1c1917;
+  .page {
+    /* Color */
+    --bg: #fdfcfa; /* Background */
+    --fg: #1c1917; /* Foreground */
     --muted: #78716c;
     --rule: #e7e5e4;
+    --logo-bg: #fff;
+
+    /* Type roles: size, line height, weight and its optical size */
+    --font: "Inter Variable", system-ui, sans-serif;
+    --text-display: 32px;
+    --leading-display: 42px;
+    --text-title: 20px;
+    --leading-title: 30px;
+    --text-body: 16px;
+    --leading-body: 26px;
+    --text-caption: 14px;
+    --leading-caption: 22px;
+    --text-micro: 12px;
+    --leading-micro: 18px;
+    --weight-regular: 400;
+    --weight-semibold: 550;
+    --weight-bold: 700;
+    --opsz-regular: 14;
+    --opsz-semibold: 18;
+    --opsz-bold: 25;
+
+    /* Spacing on a 4px grid */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-14: 56px;
+    --space-16: 64px;
+    --section-gap: var(--space-12);
+
+    /* Lines */
+    --hairline: 1px solid var(--rule);
+    --focus-ring: 1px solid var(--fg);
+    --underline: 1px;
+    --underline-hover: 2px;
+    --underline-offset: 3px;
+
+    /* Shape */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 16px;
+
+    /* Sizes */
+    --measure: 640px;
+    --avatar: 56px;
+    --tap: 40px;
+    --icon: 24px;
+    --popover: 240px;
+
+    /* Motion */
+    --duration: 150ms;
+    --ease: ease-out;
 
     min-height: 100vh;
     background: var(--bg);
     color: var(--fg);
-    font-family: "Inter Variable", system-ui, sans-serif;
-    font-variation-settings: "opsz" 14;
-    font-weight: 400;
+    font-family: var(--font);
+    font-variation-settings: "opsz" var(--opsz-regular);
+    font-weight: var(--weight-regular);
     font-synthesis: none;
-    font-size: 16px;
-    line-height: 26px;
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
   }
   @media (prefers-color-scheme: dark) {
-    .mn {
+    .page {
       --bg: #1c1917;
       --fg: #e7e5e4;
       --muted: #a8a29e;
       --rule: #3a3532;
+      --logo-bg: #e7e5e4;
     }
   }
-  .mn ::selection {
+  .page ::selection {
     background: var(--fg);
     color: var(--bg);
   }
-  .mn a:focus-visible {
-    outline: 1px solid var(--fg);
-    outline-offset: 3px;
+  .page a:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--underline-offset);
   }
 
   .wrap {
-    max-width: 640px;
+    max-width: var(--measure);
     margin: 0 auto;
-    padding: 40px 20px 48px;
-    box-sizing: border-box;
+    padding: var(--space-10) var(--space-5) var(--space-12);
   }
   .head {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: var(--space-4);
   }
   .avatar {
-    width: 56px;
-    height: 56px;
+    width: var(--avatar);
+    height: var(--avatar);
     border-radius: 50%;
   }
 
-  h1 {
-    font-size: 32px;
-    line-height: 42px;
-    font-weight: 700;
-    font-variation-settings: "opsz" 25;
-    margin: 4px 0 0;
-  }
   .byline {
-    margin-top: 48px;
+    margin-top: var(--section-gap);
+  }
+  h1 {
+    margin-top: var(--space-1);
+    font-size: var(--text-display);
+    line-height: var(--leading-display);
+    font-weight: var(--weight-bold);
+    font-variation-settings: "opsz" var(--opsz-bold);
   }
   h2 {
-    font-size: 20px;
-    line-height: 30px;
-    font-weight: 550;
-    font-variation-settings: "opsz" 18;
-    margin: 0;
+    font-size: var(--text-title);
+    line-height: var(--leading-title);
+    font-weight: var(--weight-semibold);
+    font-variation-settings: "opsz" var(--opsz-semibold);
   }
   p {
-    margin: 12px 0 0;
+    margin-top: var(--space-3);
     color: var(--muted);
   }
   h1 + p {
-    margin-top: 8px;
+    margin-top: var(--space-2);
   }
-  section {
-    margin-top: 48px;
+  section,
+  footer {
+    margin-top: var(--section-gap);
   }
   ul {
-    list-style: none;
-    margin: 8px 0 0;
-    padding: 0;
+    margin-top: var(--space-2);
   }
   .row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 16px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--rule);
-    color: inherit;
-    text-decoration: none;
+    gap: var(--space-4);
+    padding: var(--space-2) 0;
+    border-bottom: var(--hairline);
   }
   li.row:last-child,
   li:last-child > a.row {
@@ -282,89 +337,103 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
   .title {
     min-width: 0;
   }
+  .meta {
+    color: var(--muted);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    white-space: nowrap;
+  }
+
   /* The table above carries the same facts, so the chart is aria-hidden. */
   .chart {
+    --lane: 44px;
+    --logo: 32px;
+    --logo-mark: 26px;
+    --logo-gap: 6px;
+    --bar: 18px;
+    --axis: 32px;
+    --dimmed: 0.35;
+    --inset-x: var(--space-3);
+    --inset-y: 0px;
+
     position: relative;
-    margin-top: 24px;
-    padding: 0 12px;
-    border: 1px solid var(--rule);
-    border-radius: 16px;
+    margin-top: var(--space-6);
+    padding: var(--inset-y) var(--inset-x);
+    border: var(--hairline);
+    border-radius: var(--radius-xl);
     corner-shape: squircle;
   }
   .grid {
     position: absolute;
-    inset: 0 12px;
+    inset: 0 var(--inset-x);
     display: grid;
     grid-template-columns: repeat(var(--years), 1fr);
   }
   .grid span + span {
-    border-left: 1px solid var(--rule);
+    border-left: var(--hairline);
   }
   .lanes {
     position: relative;
-    margin: 0;
+    margin-top: 0;
   }
   .lane {
     position: relative;
-    height: 44px;
+    height: var(--lane);
   }
   .logo {
     position: absolute;
-    top: 6px;
-    left: max(0px, calc(var(--left) - 38px));
+    top: calc((var(--lane) - var(--logo)) / 2);
+    left: max(0px, calc(var(--left) - var(--logo) - var(--logo-gap)));
     z-index: 1;
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    width: var(--logo);
+    height: var(--logo);
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: var(--radius-lg);
     corner-shape: squircle;
-    background: #fff;
+    background: var(--logo-bg);
     box-shadow: 0 0 0 1px var(--rule);
   }
   .logo img {
-    width: 26px;
-    height: 26px;
+    width: var(--logo-mark);
+    height: var(--logo-mark);
   }
   .bar {
     position: absolute;
-    top: 13px;
+    top: calc((var(--lane) - var(--bar)) / 2);
     left: var(--left);
     width: var(--width);
-    height: 18px;
-    border-radius: 4px;
-    background: var(--c);
+    height: var(--bar);
+    border-radius: var(--radius-sm);
+    background: var(--brand);
   }
   @media (prefers-color-scheme: dark) {
     .bar {
-      background: var(--cd);
-    }
-    .logo {
-      background: #e7e5e4;
+      background: var(--brand-dark);
     }
   }
   .lanes:hover .lane:not(:hover) .bar,
   .lanes:hover .lane:not(:hover) .logo {
-    opacity: 0.35;
+    opacity: var(--dimmed);
   }
   .lane:hover {
     z-index: 2;
   }
   .card {
     position: absolute;
-    top: 40px;
-    left: clamp(0px, calc(var(--left) - 38px), calc(100% - 240px));
+    top: calc(var(--lane) - var(--space-1));
+    left: clamp(0px, calc(var(--left) - var(--logo) - var(--logo-gap)), calc(100% - var(--popover)));
     z-index: 1;
     display: grid;
     width: max-content;
-    max-width: 240px;
-    padding: 8px 12px;
-    border: 1px solid var(--rule);
-    border-radius: 8px;
+    max-width: var(--popover);
+    padding: var(--space-2) var(--space-3);
+    border: var(--hairline);
+    border-radius: var(--radius-md);
     background: var(--bg);
-    font-size: 14px;
-    line-height: 22px;
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
@@ -379,28 +448,29 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
   .axis {
     display: grid;
     grid-template-columns: repeat(var(--years), 1fr);
-    height: 32px;
+    height: var(--axis);
     align-items: center;
     color: var(--muted);
-    font-size: 12px;
-    line-height: 18px;
+    font-size: var(--text-micro);
+    line-height: var(--leading-micro);
     font-variant-numeric: tabular-nums;
     text-align: center;
   }
   @media (prefers-reduced-motion: no-preference) {
     .bar,
     .logo {
-      transition: opacity 150ms ease-out;
+      transition: opacity var(--duration) var(--ease);
     }
     .card {
       transition:
-        opacity 150ms ease-out,
-        visibility 0s 150ms;
+        opacity var(--duration) var(--ease),
+        visibility 0s var(--duration);
     }
     .lane:hover .card {
-      transition: opacity 150ms ease-out;
+      transition: opacity var(--duration) var(--ease);
     }
   }
+
   .scheme {
     position: relative;
     margin-left: auto;
@@ -408,13 +478,9 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
   .scheme button {
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
-    margin: 0;
-    padding: 0;
-    border: 0;
+    width: var(--tap);
+    height: var(--tap);
     border-radius: 50%;
-    background: none;
     color: var(--muted);
     cursor: help;
   }
@@ -423,12 +489,12 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     color: var(--fg);
   }
   .scheme button:focus-visible {
-    outline: 1px solid var(--fg);
+    outline: var(--focus-ring);
     outline-offset: 2px;
   }
   .scheme svg {
-    width: 24px;
-    height: 24px;
+    width: var(--icon);
+    height: var(--icon);
     fill: none;
     stroke: currentColor;
     stroke-width: 1.5;
@@ -448,45 +514,43 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
   }
   .tip {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + var(--space-2));
     right: 0;
     z-index: 1;
     width: max-content;
-    max-width: min(240px, calc(100vw - 40px));
-    box-sizing: border-box;
-    padding: 8px 12px;
-    border: 1px solid var(--rule);
-    border-radius: 8px;
+    max-width: min(var(--popover), calc(100vw - var(--space-10)));
+    padding: var(--space-2) var(--space-3);
+    border: var(--hairline);
+    border-radius: var(--radius-md);
     background: var(--bg);
     color: var(--fg);
-    font-size: 14px;
-    line-height: 22px;
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
     visibility: hidden;
     opacity: 0;
     transition:
-      opacity 150ms ease-out,
-      visibility 0s 150ms;
+      opacity var(--duration) var(--ease),
+      visibility 0s var(--duration);
   }
   .scheme:hover .tip,
   .scheme button:focus + .tip {
     visibility: visible;
     opacity: 1;
-    transition: opacity 150ms ease-out;
+    transition: opacity var(--duration) var(--ease);
   }
+
   footer {
-    margin-top: 48px;
     color: var(--muted);
-    font-size: 14px;
-    line-height: 22px;
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
   }
   .title a,
   a.row .title,
   .links a,
   footer a {
-    color: inherit;
     text-decoration: underline;
-    text-underline-offset: 3px;
-    text-decoration-thickness: 1px;
+    text-underline-offset: var(--underline-offset);
+    text-decoration-thickness: var(--underline);
     text-decoration-color: var(--muted);
   }
   .title a:hover,
@@ -494,7 +558,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
   .links a:hover,
   footer a:hover {
     text-decoration-color: var(--fg);
-    text-decoration-thickness: 2px;
+    text-decoration-thickness: var(--underline-hover);
   }
   @media (prefers-reduced-motion: no-preference) {
     .title a,
@@ -502,21 +566,15 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     .links a,
     footer a {
       transition:
-        text-decoration-thickness 150ms ease-out,
-        text-decoration-color 150ms ease-out;
+        text-decoration-thickness var(--duration) var(--ease),
+        text-decoration-color var(--duration) var(--ease);
     }
-  }
-  .meta {
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 22px;
-    white-space: nowrap;
   }
   .links {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
     color: var(--fg);
   }
   .links span {
@@ -528,10 +586,18 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
       flex-direction: column;
       gap: 0;
     }
+    .chart {
+      --inset-x: 0px;
+      border: 0;
+    }
   }
   @media (min-width: 640px) {
     .wrap {
-      padding: 64px 32px 56px;
+      padding: var(--space-16) var(--space-8) var(--space-14);
+    }
+    .chart {
+      --inset-x: var(--space-6);
+      --inset-y: var(--space-4);
     }
   }
 </style>
