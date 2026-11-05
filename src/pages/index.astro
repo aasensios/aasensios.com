@@ -1,11 +1,18 @@
 ---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
 import Layout from "@layouts/layout.astro";
+import avatar from "../assets/avatar.jpg";
 import { site } from "../content/site";
 import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
+import { axisYears, barPosition } from "../lib/timeline";
 
 const now = toYearMonth(new Date());
 const copy = site.copy;
 const years = yearsSince(site.firstJobStart, now);
+const axis = axisYears(site.firstJobStart.year, now);
+const logos = import.meta.glob<{ default: ImageMetadata }>("../assets/logos/*", { eager: true });
+const logo = (file: string) => logos[`../assets/logos/${file}`].default;
 ---
 
 <Layout
@@ -15,7 +22,15 @@ const years = yearsSince(site.firstJobStart, now);
   <div class="mn">
     <div class="wrap">
       <header class="head">
-        <img class="avatar" src={site.avatar} alt="" width="56" height="56" />
+        <Image
+          class="avatar"
+          src={avatar}
+          alt=""
+          width={56}
+          height={56}
+          densities={[1, 2]}
+          loading="eager"
+        />
         <span class="name">{site.name}</span>
         <span class="scheme">
           <button type="button" aria-label="Light and dark mode" aria-describedby="scheme-tip">
@@ -64,6 +79,58 @@ const years = yearsSince(site.firstJobStart, now);
               ))
             }
           </ul>
+          <div class="chart" style={`--years:${axis.length}`} aria-hidden="true">
+            <div class="grid">
+              {axis.map(() => (
+                <span />
+              ))}
+            </div>
+            <ul class="lanes">
+              {
+                site.experience.map((e, i) => {
+                  // Experience is newest first, so the job that came next is the previous one.
+                  const next = site.experience[i - 1];
+                  const { left, width } = barPosition(
+                    e.start,
+                    e.end,
+                    site.firstJobStart.year,
+                    now,
+                    next?.start,
+                  );
+                  return (
+                    <li
+                      class="lane"
+                      style={`--left:${left}%;--width:${width}%;--c:${e.color};--cd:${e.colorDark ?? e.color}`}
+                    >
+                      <span class="logo">
+                        <Image
+                          src={logo(e.logo)}
+                          alt=""
+                          width={26}
+                          height={26}
+                          densities={[1, 2]}
+                          loading="eager"
+                        />
+                      </span>
+                      <span class="bar" />
+                      <span class="card">
+                        <span class="card-title">
+                          {e.role} at {e.company}
+                          {e.client && ` for ${e.client.name}`}
+                        </span>
+                        <span class="card-meta">{formatPeriodMonths(e.start, e.end, now)}</span>
+                      </span>
+                    </li>
+                  );
+                })
+              }
+            </ul>
+            <div class="axis">
+              {axis.map((y) => (
+                <span>{y}</span>
+              ))}
+            </div>
+          </div>
         </section>
 
         <section>
@@ -116,11 +183,6 @@ const years = yearsSince(site.firstJobStart, now);
 </Layout>
 
 <style>
-  /* Fluid Functionalism roles, scaled up for reading:
-     all Inter. Display 32/40 at 700 (opsz 25), title 20/28 at 550
-     (opsz 18), body 16/24 and caption 14/20 at 400 (opsz 14). Rows sit on the ladder: 8 + 24 + 8 = 40px.
-     Space only goes above elements: 48 above a section, 8 below a
-     heading, 12 between blocks. */
   .mn {
     --bg: #fdfcfa;
     --fg: #1c1917;
@@ -210,8 +272,131 @@ const years = yearsSince(site.firstJobStart, now);
     color: inherit;
     text-decoration: none;
   }
+  li.row:last-child,
+  li:last-child > a.row {
+    border-bottom: 0;
+  }
   .title {
     min-width: 0;
+  }
+  /* The table above carries the same facts, so the chart is aria-hidden. */
+  .chart {
+    position: relative;
+    margin-top: 24px;
+    padding: 0 12px;
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    corner-shape: squircle;
+  }
+  .grid {
+    position: absolute;
+    inset: 0 12px;
+    display: grid;
+    grid-template-columns: repeat(var(--years), 1fr);
+  }
+  .grid span + span {
+    border-left: 1px solid var(--rule);
+  }
+  .lanes {
+    position: relative;
+    margin: 0;
+  }
+  .lane {
+    position: relative;
+    height: 44px;
+  }
+  .logo {
+    position: absolute;
+    top: 6px;
+    left: max(0px, calc(var(--left) - 38px));
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    overflow: hidden;
+    border-radius: 10px;
+    corner-shape: squircle;
+    background: #fff;
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+  .logo img {
+    width: 26px;
+    height: 26px;
+  }
+  .bar {
+    position: absolute;
+    top: 13px;
+    left: var(--left);
+    width: var(--width);
+    height: 18px;
+    border-radius: 4px;
+    background: var(--c);
+  }
+  @media (prefers-color-scheme: dark) {
+    .bar {
+      background: var(--cd);
+    }
+    .logo {
+      background: #e7e5e4;
+    }
+  }
+  .lanes:hover .lane:not(:hover) .bar,
+  .lanes:hover .lane:not(:hover) .logo {
+    opacity: 0.35;
+  }
+  .lane:hover {
+    z-index: 2;
+  }
+  .card {
+    position: absolute;
+    top: 40px;
+    left: clamp(0px, calc(var(--left) - 38px), calc(100% - 240px));
+    z-index: 1;
+    display: grid;
+    width: max-content;
+    max-width: 240px;
+    padding: 8px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--bg);
+    font-size: 14px;
+    line-height: 20px;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .lane:hover .card {
+    visibility: visible;
+    opacity: 1;
+  }
+  .card-meta {
+    color: var(--muted);
+  }
+  .axis {
+    display: grid;
+    grid-template-columns: repeat(var(--years), 1fr);
+    height: 32px;
+    align-items: center;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 16px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar,
+    .logo {
+      transition: opacity 150ms ease-out;
+    }
+    .card {
+      transition:
+        opacity 150ms ease-out,
+        visibility 0s 150ms;
+    }
+    .lane:hover .card {
+      transition: opacity 150ms ease-out;
+    }
   }
   .scheme {
     position: relative;
@@ -220,8 +405,8 @@ const years = yearsSince(site.firstJobStart, now);
   .scheme button {
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     margin: 0;
     padding: 0;
     border: 0;
@@ -239,8 +424,8 @@ const years = yearsSince(site.firstJobStart, now);
     outline-offset: 2px;
   }
   .scheme svg {
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.5;
@@ -306,6 +491,17 @@ const years = yearsSince(site.firstJobStart, now);
   .links a:hover,
   footer a:hover {
     text-decoration-color: var(--fg);
+    text-decoration-thickness: 2px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .title a,
+    a.row .title,
+    .links a,
+    footer a {
+      transition:
+        text-decoration-thickness 150ms ease-out,
+        text-decoration-color 150ms ease-out;
+    }
   }
   .meta {
     color: var(--muted);

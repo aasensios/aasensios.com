@@ -29,7 +29,9 @@ describe("site content", () => {
     expect(json).not.toContain("mailto:");
   });
 
-  it("references an avatar that exists in public/", () => {
-    expect(existsSync(`public${site.avatar}`)).toBe(true);
+  it("references logos that exist in src/assets/logos/", () => {
+    for (const e of site.experience) {
+      expect(existsSync(`src/assets/logos/${e.logo}`)).toBe(true);
+    }
   });
 });
