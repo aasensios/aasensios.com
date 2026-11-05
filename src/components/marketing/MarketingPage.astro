@@ -218,6 +218,26 @@ const [line1, highlight, line3] = copy.headline;
     outline: 2px solid var(--pink);
     outline-offset: 2px;
   }
+  /* Touch: the toggle is the site's core control, so it gets full-size targets. */
+  @media (pointer: coarse) {
+    .mk :global(.style-toggle button) {
+      min-height: 44px;
+      padding-inline: 14px;
+      font-size: 14px;
+    }
+  }
+  /* Narrow screens: the toggle takes its own full-width row under the name. */
+  @media (max-width: 540px) {
+    .bar .inner {
+      flex-wrap: wrap;
+    }
+    .mk :global(.style-toggle) {
+      flex: 1 1 100%;
+    }
+    .mk :global(.style-toggle button) {
+      flex: 1;
+    }
+  }
 
   /* Hero */
   .wrap {
@@ -451,12 +471,14 @@ const [line1, highlight, line3] = copy.headline;
     display: flex;
     gap: 24px;
     margin-top: 48px;
-    padding-top: 22px;
+    padding-top: 12px;
     border-top: 3px solid var(--line);
     font-weight: 800;
     font-size: 17px;
   }
   .links a {
+    display: inline-block;
+    padding-block: 10px;
     color: var(--blue-text);
     text-decoration: underline;
     text-decoration-thickness: 3px;
