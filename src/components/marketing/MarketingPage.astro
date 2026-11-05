@@ -50,7 +50,22 @@ const [line1, highlight, line3] = copy.headline;
 
     <section class="tools">
       <h2>{copy.sections.stack}</h2>
-      <ul class="stack">{site.stack.map((t) => <li>{t.name}</li>)}</ul>
+      <ul class="stack">
+        {
+          site.stack.map((t) => (
+            <li>
+              <img
+                src={t.logo}
+                alt=""
+                width="20"
+                height="20"
+                class:list={{ "dark-invert": t.invertOnDark }}
+              />
+              {t.name}
+            </li>
+          ))
+        }
+      </ul>
     </section>
 
     <div class="two">
@@ -60,8 +75,19 @@ const [line1, highlight, line3] = copy.headline;
           {
             site.experience.map((e) => (
               <li class="row">
-                <span>{experienceLabel(e)}</span>
-                <span class="meta">{formatPeriod(e.start, e.end, now)}</span>
+                <span class="tile">
+                  <img
+                    src={e.icon}
+                    alt=""
+                    width="20"
+                    height="20"
+                    style={e.iconScale ? `transform:scale(${e.iconScale})` : undefined}
+                  />
+                </span>
+                <span class="rowbody">
+                  <span>{experienceLabel(e)}</span>
+                  <span class="meta">{formatPeriod(e.start, e.end, now)}</span>
+                </span>
               </li>
             ))
           }
@@ -74,8 +100,15 @@ const [line1, highlight, line3] = copy.headline;
             site.projects.map((p) => (
               <li>
                 <a class="row" href={p.repo}>
-                  <span>{p.title}</span>
-                  <span class="meta">{p.language}</span>
+                  <span class="rowbody">
+                    <span class="pmain">
+                      <span class="ptitle">{p.title}</span>
+                      <span class="pdesc">{p.description}</span>
+                    </span>
+                    <span class="meta">
+                      {p.language} · {p.year}
+                    </span>
+                  </span>
                 </a>
               </li>
             ))
@@ -127,6 +160,9 @@ const [line1, highlight, line3] = copy.headline;
       --green: #34d399;
       --on-accent: #15131b;
       --chip: #2b2734;
+    }
+    .mk .dark-invert {
+      filter: invert(1) hue-rotate(180deg);
     }
   }
 
@@ -324,11 +360,16 @@ const [line1, highlight, line3] = copy.headline;
     gap: 8px;
   }
   .stack li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     background: var(--chip);
     padding: 8px 12px;
     font-size: 14px;
     font-weight: 700;
-    text-align: center;
+  }
+  .stack img {
+    flex: none;
   }
   .two {
     display: grid;
@@ -361,12 +402,40 @@ const [line1, highlight, line3] = copy.headline;
   }
   .row {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
     gap: 12px;
     padding: 11px 14px;
     text-decoration: none;
   }
-  a.row:hover span:first-child {
+  .rowbody {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  /* Company marks sit on white so every logo reads the same in both schemes. */
+  .tile {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    box-sizing: border-box;
+    border: 2px solid var(--line);
+    background: #fff;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+  }
+  .pmain {
+    display: grid;
+    gap: 2px;
+  }
+  .pdesc {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  a.row:hover .ptitle {
     color: var(--blue-text);
     text-decoration: underline;
     text-decoration-thickness: 2px;
@@ -454,7 +523,7 @@ const [line1, highlight, line3] = copy.headline;
   }
 
   @media (max-width: 420px) {
-    .row {
+    .rowbody {
       flex-direction: column;
       gap: 2px;
     }
