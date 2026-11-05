@@ -1,5 +1,4 @@
 ---
-import { DEFAULT_STYLE, STORAGE_KEY, STYLES } from "../lib/style";
 import "../styles/global.css";
 
 interface Props {
@@ -13,18 +12,11 @@ const { title, description } = Astro.props;
 <!doctype html>
 <html lang="en">
   <head>
-    <script is:inline define:vars={{ STORAGE_KEY, STYLES, DEFAULT_STYLE }}>
-      // Apply the stored style before first paint. Any storage error falls back to the default.
-      var root = document.documentElement;
-      root.classList.add("js");
-      try {
-        var stored = window.localStorage.getItem(STORAGE_KEY);
-        root.dataset.style = STYLES.indexOf(stored) >= 0 ? stored : DEFAULT_STYLE;
-      } catch (e) {
-        root.dataset.style = DEFAULT_STYLE;
-      }
-    </script>
     <meta charset="UTF-8" />
+    <script is:inline>
+      // The style toggle needs JavaScript, so it is only shown when this runs.
+      document.documentElement.classList.add("js");
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="color-scheme" content="light dark" />

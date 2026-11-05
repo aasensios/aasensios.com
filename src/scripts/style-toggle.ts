@@ -1,17 +1,12 @@
-import { DEFAULT_STYLE, isStyleId, writeStoredStyle, type StyleId } from "../lib/style";
+import { isStyleId, type StyleId } from "../lib/style";
 
 const root = document.documentElement;
 
-function syncPressed(style: StyleId) {
+function applyStyle(style: StyleId) {
+  root.dataset.style = style;
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-set-style]")) {
     button.setAttribute("aria-pressed", String(button.dataset.setStyle === style));
   }
-}
-
-function applyStyle(style: StyleId) {
-  root.dataset.style = style;
-  syncPressed(style);
-  writeStoredStyle(() => window.localStorage, style);
   // The clicked button's panel is now hidden; keep keyboard focus on the same option in the new one.
   document
     .querySelector<HTMLButtonElement>(`[data-style-panel="${style}"] [data-set-style="${style}"]`)
@@ -23,5 +18,3 @@ document.addEventListener("click", (event) => {
   const style = button?.dataset.setStyle;
   if (isStyleId(style)) applyStyle(style);
 });
-
-syncPressed(isStyleId(root.dataset.style) ? root.dataset.style : DEFAULT_STYLE);
