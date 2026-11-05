@@ -5,5 +5,36 @@
       "maxFindings": 5,
       "maxChars": 8000
     }
+  },
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [".impeccable/mocks/decision/challenger-cyc.html"],
+        "createdAt": "2026-11-05T01:50:41.776Z",
+        "reason": "Agent: static scan compares text to the gradient's bottom rose stop; the text sits on the black top half of a throwaway decision sketch"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(255 255 255 / 0.12)",
+        "createdAt": "2026-11-05T03:47:39.907Z",
+        "reason": "Agent: translucent white highlights for sheen and lighting on moulded surfaces, not palette colours"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(255 255 255 / 0.26)",
+        "createdAt": "2026-11-05T03:47:39.947Z",
+        "reason": "Agent: translucent white highlights for sheen and lighting on moulded surfaces, not palette colours"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(255 255 255 / 0.55)",
+        "createdAt": "2026-11-05T03:47:39.985Z",
+        "reason": "Agent: translucent white highlights for sheen and lighting on moulded surfaces, not palette colours"
+      }
+    ]
   }
 }

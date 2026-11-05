@@ -41,9 +41,9 @@ const tool = (name: string, slug: string, invertOnDark = false): Tool => ({
 export const site = {
   name: "Alejandro Asensio",
   role: "Frontend-focused product engineer",
-  location: "Barcelona, remote",
+  location: "Barcelona area, full remote",
   avatar: "/avatar.jpg",
-  /** Start of the first job; drives the "N years shipping" sticker. */
+  /** Start of the first job; drives the years shown in the stat cells. */
   firstJobStart: { year: 2019, month: 6 } as YearMonth,
 
   experience: [
@@ -95,7 +95,6 @@ export const site = {
     tool("shadcn/ui", "shadcnui", true),
     tool("Astro", "astro", true),
     tool("Vite+", "vite"),
-    tool("Nx", "nx", true),
     tool("pnpm", "pnpm"),
     tool("Playwright", "playwright"),
     tool("Storybook", "storybook"),
@@ -126,7 +125,7 @@ export const site = {
     {
       title: "Medical blog",
       repo: "https://github.com/aasensios/medical-blog",
-      description: "JSP blog with MVC and data access",
+      description: "Blog with MVC and data access",
       language: "Java",
       year: 2019,
       illustration: "blog",
@@ -152,15 +151,80 @@ export const site = {
 
   copy: {
     marketing: {
-      headline: ["Fewer steps.", "Happier", "users."],
-      sticker: "years shipping",
-      lead: "I'm a frontend-focused product engineer who can't stand an extra click. I ship interfaces where the next step is always obvious, and I'll happily argue with a design until it's simpler. Right now I'm rebuilding TrustYou's customer experience platform from the ground up.",
-      primaryCta: "See my work",
+      facts: (years: number) =>
+        `I've been shipping software for more than ${years} years now. Based in Barcelona area, working full remote.`,
+      keysLabel: "Get in touch",
+      headline: "I make screens you can leave.",
+      intro: [
+        "Building digital products taught me one thing: the best interface gets you what you need, then lets you go.",
+        "So I cut steps, make the next action obvious and keep things fast. The fewer minutes you spend with my screens, the better I've done my job.",
+      ],
       secondaryCta: "Say hi on LinkedIn",
-      stats: [
-        { value: "23%", label: "faster interactions at TrustYou" },
-        { value: "78%", label: "faster builds at Inditex" },
-        { value: "4", label: "industries: research, automotive, retail and hospitality" },
+      githubCta: "See my work on GitHub",
+      moodsLead: "Same portfolio, three moods:",
+      /** The page-turn corner at the bottom of the page: what it says, and its accessible name. */
+      peelTip: (style: string) => `Turn the page: ${style}`,
+      peelLabel: "Turn the page to see this portfolio as a SaaS",
+      /** What the speaker grille says over its preview: where it goes, or that you are here. */
+      glassLabels: {
+        saas: "See as a SaaS",
+        minimalist: "Go minimalist",
+        current: "You're already here",
+      } as Record<string, string>,
+      /** A second, shorter achievement per job, shown under its result. Keyed by company. */
+      achievements: {
+        TrustYou: "Led the internationalization strategy",
+        Cognizant: "Wrote BDD end-to-end tests with Cypress and Cucumber",
+        Capitole: "Built backend microservices with Flask and FastAPI",
+        BSC: "Shipped a COVID-19 resources site against a tight deadline",
+      } as Record<string, string>,
+      /** Each company's site and a screenshot of it, for the hover card on its name. */
+      companies: {
+        TrustYou: {
+          name: "TrustYou",
+          url: "https://www.trustyou.com",
+          preview: "/previews/trustyou.webp",
+        },
+        Cognizant: {
+          name: "Cognizant",
+          url: "https://www.cognizant.com",
+          preview: "/previews/cognizant.webp",
+        },
+        Capitole: {
+          name: "Capitole Consulting",
+          url: "https://www.capitole-consulting.com",
+          preview: "/previews/capitole.webp",
+        },
+        BSC: {
+          name: "Barcelona Supercomputing Center",
+          url: "https://www.bsc.es",
+          preview: "/previews/bsc.webp",
+        },
+      } as Record<string, { name: string; url: string; preview: string }>,
+      /** Measured result per job, shown on that job's experience row. Keyed by company. */
+      outcomes: {
+        TrustYou: { value: "23%", label: "faster interactions" },
+        Cognizant: { value: "78%", label: "faster builds" },
+        Capitole: { value: "React", label: "features for an app testing vehicle electronics" },
+        BSC: {
+          value: "2",
+          label: "clinical research apps built from scratch: Indexer and ICTUSnet",
+        },
+      } as Record<string, { value: string; label: string }>,
+      /** The stack grouped by job; every `site.stack` name appears exactly once. */
+      stackGroups: [
+        {
+          label: "Frontend",
+          tools: ["TypeScript", "React", "TanStack", "shadcn/ui", "Astro"],
+        },
+        {
+          label: "Tooling and testing",
+          tools: ["Claude", "Vite+", "pnpm", "Playwright", "Storybook"],
+        },
+        {
+          label: "Backend and data",
+          tools: ["FastAPI", "PostgreSQL", "MongoDB", "ClickHouse", "Docker"],
+        },
       ],
       sections: {
         stack: "Tools I reach for",

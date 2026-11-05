@@ -26,6 +26,35 @@ export function formatPeriod(start: YearMonth, end: YearMonth | null, now: YearM
   return `${formatYearRange(start, end)} ${MIDDLE_DOT} ${formatDuration(monthsBetween(start, end ?? now))}`;
 }
 
+const MONTH_ABBR = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/**
+ * Like `formatPeriod`, but a closed period within one year names its months
+ * ("Jun–Nov 2021 · 6 months") instead of repeating the year.
+ */
+export function formatPeriodMonths(
+  start: YearMonth,
+  end: YearMonth | null,
+  now: YearMonth,
+): string {
+  if (!end || end.year !== start.year) return formatPeriod(start, end, now);
+  const range = `${MONTH_ABBR[start.month - 1]}${EN_DASH}${MONTH_ABBR[end.month - 1]} ${start.year}`;
+  return `${range} ${MIDDLE_DOT} ${formatDuration(monthsBetween(start, end))}`;
+}
+
 /** Whole years elapsed since `start`, rounded down; it flips on the anniversary month. */
 export function yearsSince(start: YearMonth, now: YearMonth): number {
   return Math.floor((monthsBetween(start, now) - 1) / 12);

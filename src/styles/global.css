@@ -33,3 +33,46 @@ body {
     scroll-behavior: smooth;
   }
 }
+
+/* Switching styles cross-fades the page; the new style settles in from slightly below. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: 220ms ease-in both style-out;
+  }
+  ::view-transition-new(root) {
+    animation: 380ms cubic-bezier(0.22, 1, 0.36, 1) both style-in;
+  }
+}
+
+@keyframes style-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes style-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* A previewed style grows from the speaker grille into the full page. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(style-preview) {
+    animation-duration: 640ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  ::view-transition-old(style-preview) {
+    animation: 320ms ease-in both style-out;
+  }
+  ::view-transition-new(style-preview) {
+    animation: 640ms cubic-bezier(0.22, 1, 0.36, 1) both style-grow;
+  }
+}
+
+@keyframes style-grow {
+  from {
+    opacity: 0.6;
+  }
+}

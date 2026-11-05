@@ -14,7 +14,6 @@ describe("site content", () => {
       "shadcn/ui",
       "Astro",
       "Vite+",
-      "Nx",
       "pnpm",
       "Playwright",
       "Storybook",
@@ -24,6 +23,18 @@ describe("site content", () => {
       "MongoDB",
       "ClickHouse",
     ]);
+  });
+
+  it("puts every stack tool in exactly one marketing group", () => {
+    const grouped = site.copy.marketing.stackGroups.flatMap((g) => g.tools);
+    expect([...grouped].sort()).toEqual(site.stack.map((t) => t.name).sort());
+  });
+
+  it("keys marketing outcomes by real companies", () => {
+    const companies = site.experience.map((e) => e.company);
+    for (const company of Object.keys(site.copy.marketing.outcomes)) {
+      expect(companies).toContain(company);
+    }
   });
 
   it("lists exactly the four side projects in order", () => {

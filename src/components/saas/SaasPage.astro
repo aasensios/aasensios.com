@@ -64,7 +64,7 @@ const illustrations = { forms: Forms, gmail: Gmail, blog: Blog, dna: Dna };
             const Illustration = illustrations[p.illustration];
             return (
               <li>
-                <a href={p.repo}>
+                <a href={p.repo} target="_blank" rel="noopener">
                   <Illustration class="ill" />
                   <span class="body">
                     <b>{p.title}</b>
@@ -83,7 +83,7 @@ const illustrations = { forms: Forms, gmail: Gmail, blog: Blog, dna: Dna };
       <p class="links">
         {
           site.links.map((l) => (
-            <a href={l.href}>
+            <a href={l.href} target="_blank" rel="noopener">
               <img
                 src={l.logo}
                 alt=""
@@ -308,7 +308,7 @@ const illustrations = { forms: Forms, gmail: Gmail, blog: Blog, dna: Dna };
       padding-top: 36px;
     }
     .stack {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
     }
   }
   @media (min-width: 900px) {

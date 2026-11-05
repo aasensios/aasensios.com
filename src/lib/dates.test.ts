@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vite-plus/test";
-import { formatDuration, formatPeriod, formatYearRange, monthsBetween, yearsSince } from "./dates";
+import {
+  formatDuration,
+  formatPeriod,
+  formatPeriodMonths,
+  formatYearRange,
+  monthsBetween,
+  yearsSince,
+} from "./dates";
 
 const now = { year: 2026, month: 11 };
 
@@ -31,6 +38,15 @@ describe("formatYearRange / formatPeriod", () => {
     expect(formatPeriod({ year: 2021, month: 12 }, { year: 2022, month: 8 }, now)).toBe(
       "2021–2022 · 9 months",
     );
+  });
+  it("names the months when a closed period starts and ends in the same year", () => {
+    expect(formatPeriodMonths({ year: 2021, month: 6 }, { year: 2021, month: 11 }, now)).toBe(
+      "Jun–Nov 2021 · 6 months",
+    );
+    expect(formatPeriodMonths({ year: 2021, month: 12 }, { year: 2022, month: 8 }, now)).toBe(
+      "2021–2022 · 9 months",
+    );
+    expect(formatPeriodMonths({ year: 2022, month: 8 }, null, now)).toBe("2022–now · 4 years");
   });
   it("never emits an em dash", () => {
     expect(formatPeriod({ year: 2019, month: 6 }, { year: 2021, month: 6 }, now)).not.toContain(
