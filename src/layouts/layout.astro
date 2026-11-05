@@ -30,6 +30,36 @@ const { title, description } = Astro.props;
     />
     <link rel="preload" href="/fonts/inter-variable.woff2" as="font" type="font/woff2" crossorigin />
     <title>{title}</title>
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        const prefersDark = matchMedia("(prefers-color-scheme: dark)");
+        let picked = false;
+        const apply = (theme) => {
+          root.dataset.theme = theme;
+          for (const button of document.querySelectorAll("[data-theme-toggle]")) {
+            button.setAttribute("aria-pressed", String(theme === "dark"));
+          }
+        };
+        apply(prefersDark.matches ? "dark" : "light");
+        prefersDark.addEventListener("change", (event) => {
+          if (!picked) apply(event.matches ? "dark" : "light");
+        });
+        addEventListener("DOMContentLoaded", () => apply(root.dataset.theme));
+        addEventListener("click", (event) => {
+          const button = event.target.closest("[data-theme-toggle]");
+          if (!button) return;
+          picked = true;
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+          if (document.startViewTransition && !still) {
+            document.startViewTransition(() => apply(next));
+          } else {
+            apply(next);
+          }
+        });
+      })();
+    </script>
   </head>
   <body>
     <slot />

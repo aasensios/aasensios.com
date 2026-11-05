@@ -1,6 +1,8 @@
 ---
 import { Image } from "astro:assets";
-import type { ImageMetadata } from "astro";
+import type { SvgComponent } from "astro/types";
+import Moon from "../assets/icons/moon.svg";
+import Sun from "../assets/icons/sun.svg";
 import Layout from "@layouts/layout.astro";
 import avatar from "../assets/avatar.jpg";
 import { site } from "../content/site";
@@ -11,8 +13,11 @@ const now = toYearMonth(new Date());
 const copy = site.copy;
 const years = yearsSince(site.firstJobStart, now);
 const axis = axisYears(site.firstJobStart.year, now);
-const logos = import.meta.glob<{ default: ImageMetadata }>("../assets/logos/*", { eager: true });
-const logo = (file: string) => logos[`../assets/logos/${file}`].default;
+const logos = import.meta.glob<SvgComponent>("../assets/logos/*.svg", {
+  eager: true,
+  import: "default",
+});
+const logo = (file: string) => logos[`../assets/logos/${file}`];
 ---
 
 <Layout
@@ -32,18 +37,20 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
           loading="eager"
         />
         <span class="scheme">
-          <button type="button" aria-label="Light and dark mode" aria-describedby="scheme-tip">
-            <svg class="sun" viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="4"></circle>
-              <path
-                d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-              ></path>
-            </svg>
-            <svg class="moon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"></path>
-            </svg>
+          <button type="button" aria-label={copy.theme.label} aria-pressed="false" data-theme-toggle>
+            <span class="sky">
+            <span class="body sun">
+              <Sun aria-hidden="true" />
+            </span>
+            <span class="body moon">
+              <Moon aria-hidden="true" />
+            </span>
+            </span>
           </button>
-          <span class="tip" role="tooltip" id="scheme-tip">{copy.colorScheme}</span>
+          <span class="tip" aria-hidden="true">
+            <span class="light-only">{copy.theme.toDark}</span>
+            <span class="dark-only">{copy.theme.toLight}</span>
+          </span>
         </span>
       </header>
 
@@ -97,20 +104,14 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
                     now,
                     next?.start,
                   );
+                  const Logo = logo(e.logo);
                   return (
                     <li
                       class="lane"
                       style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color}`}
                     >
                       <span class="logo">
-                        <Image
-                          src={logo(e.logo)}
-                          alt=""
-                          width={26}
-                          height={26}
-                          densities={[1, 2]}
-                          loading="eager"
-                        />
+                        <Logo width={26} height={26} aria-hidden="true" />
                       </span>
                       <span class="bar" />
                       <span class="card">
@@ -182,14 +183,33 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
   </div>
 </Layout>
 
+<script>
+  const toggle = document.querySelector<HTMLElement>("[data-theme-toggle]");
+  const sky = toggle?.querySelector<HTMLElement>(".sky");
+  if (toggle && sky && matchMedia("(hover: hover)").matches) {
+    toggle.addEventListener("pointermove", (event) => {
+      const box = sky.getBoundingClientRect();
+      const tx = ((event.clientX - box.left) / box.width - 0.5) * 2;
+      const ty = ((event.clientY - box.top) / box.height - 0.5) * 2;
+      sky.style.setProperty("--tx", String(Math.max(-1, Math.min(1, tx))));
+      sky.style.setProperty("--ty", String(Math.max(-1, Math.min(1, ty))));
+    });
+    toggle.addEventListener("pointerleave", () => {
+      sky.style.removeProperty("--tx");
+      sky.style.removeProperty("--ty");
+    });
+  }
+</script>
+
+
 <style>
   .page {
     /* Color */
-    --bg: #fdfcfa; /* Background */
-    --fg: #1c1917; /* Foreground */
-    --muted: #78716c;
-    --rule: #e7e5e4;
-    --logo-bg: #fff;
+    --bg: light-dark(#faf7f0, #0e131b); /* Background */
+    --fg: light-dark(#231f17, #dfe6f1); /* Foreground */
+    --muted: light-dark(#756b57, #909fb6);
+    --rule: light-dark(#e7e1d5, #252d39);
+    --logo-bg: light-dark(#fff, #dfe6f1);
 
     /* Type roles: size, line height, weight and its optical size */
     --font: "Inter Variable", system-ui, sans-serif;
@@ -240,14 +260,17 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     /* Sizes */
     --measure: 640px;
     --avatar: 56px;
-    --tap: 40px;
-    --icon: 24px;
+    --tap: 64px;
+    --icon: 56px;
     --popover: 240px;
 
     /* Motion */
     --duration: 150ms;
     --ease: ease-out;
 
+    position: relative;
+    isolation: isolate;
+    overflow-x: clip;
     min-height: 100vh;
     background: var(--bg);
     color: var(--fg);
@@ -257,15 +280,6 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     font-synthesis: none;
     font-size: var(--text-body);
     line-height: var(--leading-body);
-  }
-  @media (prefers-color-scheme: dark) {
-    .page {
-      --bg: #1c1917;
-      --fg: #e7e5e4;
-      --muted: #a8a29e;
-      --rule: #3a3532;
-      --logo-bg: #e7e5e4;
-    }
   }
   .page ::selection {
     background: var(--fg);
@@ -289,7 +303,8 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
   .avatar {
     width: var(--avatar);
     height: var(--avatar);
-    border-radius: 50%;
+    border-radius: 30%;
+    corner-shape: squircle;
   }
 
   .byline {
@@ -395,7 +410,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     background: var(--logo-bg);
     box-shadow: 0 0 0 1px var(--rule);
   }
-  .logo img {
+  .logo svg {
     width: var(--logo-mark);
     height: var(--logo-mark);
   }
@@ -406,12 +421,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     width: var(--width);
     height: var(--bar);
     border-radius: var(--radius-sm);
-    background: var(--brand);
-  }
-  @media (prefers-color-scheme: dark) {
-    .bar {
-      background: var(--brand-dark);
-    }
+    background: light-dark(var(--brand), var(--brand-dark));
   }
   .lanes:hover .lane:not(:hover) .bar,
   .lanes:hover .lane:not(:hover) .logo {
@@ -480,9 +490,11 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     place-items: center;
     width: var(--tap);
     height: var(--tap);
+    position: relative;
+    z-index: 2;
     border-radius: 50%;
     color: var(--muted);
-    cursor: help;
+    cursor: pointer;
   }
   .scheme button:hover,
   .scheme button:focus-visible {
@@ -492,29 +504,78 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
     outline: var(--focus-ring);
     outline-offset: 2px;
   }
-  .scheme svg {
+  .sky {
+    view-transition-name: theme-icon;
+    position: relative;
     width: var(--icon);
     height: var(--icon);
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    /* The horizon sits a little below the icon, so its glow isn't cut. */
+    --horizon: 16px;
+    clip-path: inset(-100% -100% calc(var(--horizon) * -1) -100%);
+  }
+  .body {
+    position: absolute;
+    inset: 0;
+  }
+  .scheme svg {
+    display: block;
+    width: var(--icon);
+    height: var(--icon);
+    filter: drop-shadow(0 0 6px var(--halo))
+      drop-shadow(calc(var(--tx, 0) * 2px) calc(var(--ty, 0) * 2px) 6px var(--aura, transparent));
+  }
+  .sun {
+    --halo: rgb(255 180 60 / 0.55);
   }
   .moon {
-    display: none;
+    --halo: rgb(255 255 255 / 0.4);
   }
-  @media (prefers-color-scheme: dark) {
+  .scheme button:is(:hover, :focus-visible) .sun {
+    --aura: rgb(255 170 50 / 0.6);
+  }
+  .scheme button:is(:hover, :focus-visible) .moon {
+    --aura: rgb(255 255 255 / 0.5);
+  }
+  .sun {
+    translate: 0 0;
+    opacity: 1;
+  }
+  .moon {
+    opacity: 0;
+  }
+  :global([data-theme="dark"]) .sun {
+    translate: 0 calc(100% + var(--horizon));
+    opacity: 0;
+  }
+  :global([data-theme="dark"]) .moon {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .scheme svg {
+      transition: filter var(--duration) var(--ease);
+    }
     .sun {
-      display: none;
+      transition:
+        translate var(--daybreak) var(--daybreak-ease),
+        opacity var(--daybreak) var(--daybreak-ease);
     }
     .moon {
-      display: block;
+      transition: opacity var(--daybreak) var(--daybreak-ease);
     }
+  }
+  .dark-only,
+  :global([data-theme="dark"]) .light-only {
+    display: none;
+  }
+  :global([data-theme="dark"]) .dark-only {
+    display: inline;
+  }
+  :global(:root:not([data-theme])) .scheme {
+    display: none;
   }
   .tip {
     position: absolute;
-    top: calc(100% + var(--space-2));
+    top: calc(100% + var(--space-4));
     right: 0;
     z-index: 1;
     width: max-content;
@@ -532,8 +593,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`].default;
       opacity var(--duration) var(--ease),
       visibility 0s var(--duration);
   }
-  .scheme:hover .tip,
-  .scheme button:focus + .tip {
+  .scheme:hover .tip {
     visibility: visible;
     opacity: 1;
     transition: opacity var(--duration) var(--ease);

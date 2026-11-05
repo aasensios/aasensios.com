@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <radialGradient id="sun-fill" cx="58%" cy="40%" fx="66%" fy="30%" r="62%">
+      <stop offset="0" stop-color="#ffe08a"></stop>
+      <stop offset="1" stop-color="#ffb43d"></stop>
+    </radialGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" fill="url(#sun-fill)"></circle>
+</svg>

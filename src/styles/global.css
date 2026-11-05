@@ -50,6 +50,136 @@ body {
   margin: 0;
 }
 
+:root {
+  color-scheme: light dark;
+  /* Shared by the page transition and the sun/moon swap so they stay in step. */
+  --daybreak: 1400ms;
+  --daybreak-ease: cubic-bezier(0.37, 0, 0.63, 1);
+  /* How wide the daylight dome is for its height; wider on tall screens to keep it flat. */
+  --arc: 2;
+  --arc-base: 60%;
+}
+@media (orientation: portrait) {
+  :root {
+    --arc: 4.5;
+    --arc-base: 140%;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@property --dome {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+::view-transition {
+  background: linear-gradient(
+    to top,
+    #f4c487 0%,
+    #ec9f80 22%,
+    #d98a9c 45%,
+    #8f79b8 72%,
+    #262a52 100%
+  );
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  animation-duration: var(--daybreak);
+  animation-timing-function: var(--daybreak-ease);
+  animation-fill-mode: both;
+}
+/* The daylight snapshot: a dome rising from (or sinking into) the horizon. */
+:root[data-theme="light"]::view-transition-new(root),
+:root[data-theme="dark"]::view-transition-old(root) {
+  z-index: 1;
+  mask-image: radial-gradient(
+    ellipse calc(var(--dome) * var(--arc) + var(--arc-base)) var(--dome) at 50% 100%,
+    #000 40%,
+    transparent 85%
+  );
+}
+/* The night snapshot: clear inside a wider dome, so the colours show between. */
+:root[data-theme="light"]::view-transition-old(root),
+:root[data-theme="dark"]::view-transition-new(root) {
+  mask-image: radial-gradient(
+    ellipse calc((var(--dome) * var(--arc) + var(--arc-base)) * 1.6) calc(var(--dome) * 1.7) at 50%
+      100%,
+    transparent 30%,
+    #000 80%
+  );
+}
+:root[data-theme="light"]::view-transition-new(root) {
+  animation-name: sunrise;
+}
+:root[data-theme="light"]::view-transition-old(root) {
+  animation-name: night-recedes;
+}
+:root[data-theme="dark"]::view-transition-old(root) {
+  animation-name: sunset;
+}
+:root[data-theme="dark"]::view-transition-new(root) {
+  animation-name: night-returns;
+}
+@keyframes sunrise {
+  0% {
+    --dome: 0%;
+    opacity: 0;
+    filter: sepia(0.4) saturate(1.4) hue-rotate(-10deg);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    --dome: 300%;
+    opacity: 1;
+    filter: sepia(0) saturate(1) hue-rotate(0deg);
+  }
+}
+@keyframes sunset {
+  0% {
+    --dome: 300%;
+    opacity: 1;
+    filter: sepia(0) saturate(1) hue-rotate(0deg);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    --dome: 0%;
+    opacity: 0;
+    filter: sepia(0.4) saturate(1.4) hue-rotate(-10deg);
+  }
+}
+@keyframes night-recedes {
+  from {
+    --dome: 0%;
+  }
+  to {
+    --dome: 300%;
+  }
+}
+@keyframes night-returns {
+  from {
+    --dome: 300%;
+  }
+  to {
+    --dome: 0%;
+  }
+}
+::view-transition-old(theme-icon) {
+  display: none;
+}
+::view-transition-new(theme-icon) {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
