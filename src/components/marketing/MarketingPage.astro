@@ -6,6 +6,7 @@ import { formatPeriod, toYearMonth, yearsSince } from "../../lib/dates";
 const now = toYearMonth(new Date());
 const copy = site.copy.marketing;
 const linkedin = site.links.find((l) => l.label === "LinkedIn")!;
+const current = site.experience.find((e) => e.end === null)!;
 const [line1, highlight, line3] = copy.headline;
 ---
 
@@ -28,6 +29,7 @@ const [line1, highlight, line3] = copy.headline;
           </h1>
           <p class="sticker">{yearsSince(site.firstJobStart, now)} {copy.sticker}</p>
         </div>
+        <p class="role">{experienceLabel(current)}<span class="sep"> · </span><span class="loc">{site.location}</span></p>
         <p class="lead">{copy.lead}</p>
         <div class="ctas">
           <a class="btn btn--primary" href="#marketing-projects">{copy.primaryCta}</a>
@@ -236,10 +238,16 @@ const [line1, highlight, line3] = copy.headline;
     transform: rotate(12deg);
     font-family: var(--display);
   }
+  .role {
+    font-weight: 800;
+    font-size: 19px;
+    line-height: 1.3;
+    margin: 32px 0 0;
+  }
   .lead {
     font-weight: 600;
     font-size: 17px;
-    margin: 32px 0 0;
+    margin: 10px 0 0;
     max-width: 34em;
   }
   .ctas {
@@ -347,7 +355,8 @@ const [line1, highlight, line3] = copy.headline;
     text-decoration-thickness: 2px;
     text-underline-offset: 3px;
   }
-  .meta {
+  .meta,
+  .loc {
     white-space: nowrap;
   }
 
@@ -391,9 +400,12 @@ const [line1, highlight, line3] = copy.headline;
       gap: 48px;
       align-items: start;
     }
+    .role {
+      font-size: 21px;
+      margin-top: 44px;
+    }
     .lead {
       font-size: 18px;
-      margin-top: 44px;
     }
     .stats li {
       grid-template-columns: 110px 1fr;
@@ -407,6 +419,15 @@ const [line1, highlight, line3] = copy.headline;
     }
     .two {
       grid-template-columns: 1.3fr 1fr;
+    }
+  }
+
+  @media (max-width: 540px) {
+    .role .sep {
+      display: none;
+    }
+    .role .loc {
+      display: block;
     }
   }
 

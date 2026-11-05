@@ -41,6 +41,7 @@ const tool = (name: string, slug: string, invertOnDark = false): Tool => ({
 export const site = {
   name: "Alejandro Asensio",
   role: "Frontend-focused product engineer",
+  location: "Barcelona, remote",
   avatar: "/avatar.jpg",
   /** Start of the first job; drives the "N years shipping" sticker. */
   firstJobStart: { year: 2019, month: 6 } as YearMonth,
@@ -159,7 +160,7 @@ export const site = {
       stats: [
         { value: "23%", label: "faster interactions at TrustYou" },
         { value: "78%", label: "faster builds at Inditex" },
-        { value: "4", label: "industries, 1 obsession: intuitive interfaces" },
+        { value: "4", label: "industries: research, automotive, retail and hospitality" },
       ],
       sections: {
         stack: "Tools I reach for",
