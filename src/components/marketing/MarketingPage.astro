@@ -56,7 +56,7 @@ const [line1, highlight, line3] = copy.headline;
     <div class="two">
       <section>
         <h2>{copy.sections.experience}</h2>
-        <ul class="list">
+        <ul class="list list--ruled">
           {
             site.experience.map((e) => (
               <li class="row">
@@ -69,7 +69,7 @@ const [line1, highlight, line3] = copy.headline;
       </section>
       <section id="marketing-projects">
         <h2>{copy.sections.projects}</h2>
-        <ul class="list">
+        <ul class="list list--focal">
           {
             site.projects.map((p) => (
               <li>
@@ -309,13 +309,14 @@ const [line1, highlight, line3] = copy.headline;
   h2 {
     font-family: var(--display);
     font-weight: 900;
-    font-size: 21px;
+    font-size: clamp(28px, 6vw, 44px);
+    line-height: 1;
     text-transform: uppercase;
-    letter-spacing: -0.01em;
-    margin: 0 0 14px;
+    letter-spacing: -0.035em;
+    margin: 0 0 20px;
   }
   .tools {
-    margin-top: 48px;
+    margin-top: 64px;
   }
   .stack {
     display: grid;
@@ -331,17 +332,32 @@ const [line1, highlight, line3] = copy.headline;
   }
   .two {
     display: grid;
-    gap: 40px;
-    margin-top: 48px;
+    gap: 56px;
+    margin-top: 64px;
   }
   .list {
-    border: 3px solid var(--line);
-    background: var(--surface);
-    box-shadow: 5px 5px 0 var(--line);
     font-weight: 600;
   }
   .list > li + li {
     border-top: 2px solid var(--line);
+  }
+  /* Context rows: ruled like the stats, no box. */
+  .list--ruled {
+    border-block: 3px solid var(--line);
+  }
+  .list--ruled .row {
+    padding-inline: 0;
+  }
+  /* The work is the one boxed, shadowed block below the hero. */
+  .list--focal {
+    border: 3px solid var(--line);
+    background: var(--surface);
+    box-shadow: 8px 8px 0 var(--line);
+    font-weight: 800;
+    font-size: 17px;
+  }
+  .list--focal .row {
+    padding: 16px 18px;
   }
   .row {
     display: flex;
@@ -419,10 +435,12 @@ const [line1, highlight, line3] = copy.headline;
       font-size: 30px;
     }
     .tools {
-      margin-top: 56px;
+      margin-top: 88px;
     }
     .two {
       grid-template-columns: 1.3fr 1fr;
+      margin-top: 88px;
+      gap: 64px;
     }
   }
 
