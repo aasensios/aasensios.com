@@ -90,14 +90,14 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
                 <li class="row">
                   <span class="title">
                     {e.role} at{" "}
-                    <a href={e.url} target="_blank" rel="noopener">
+                    <a href={e.url} target="_blank" rel="noopener" data-preview>
                       {e.company}
                     </a>
                     {e.client && (
                       <>
                         {" "}
                         for{" "}
-                        <a href={e.client.url} target="_blank" rel="noopener">
+                        <a href={e.client.url} target="_blank" rel="noopener" data-preview>
                           {e.client.name}
                         </a>
                       </>
@@ -239,6 +239,11 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
         </section>
       </main>
 
+      <div class="site-preview" aria-hidden="true" data-preview-card>
+        <span class="site-preview-shot"><img alt="" decoding="async" /></span>
+        <span class="site-preview-host"></span>
+      </div>
+
       <footer>
         {
           copy.footer.map((f) => (
@@ -257,6 +262,48 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
 </Layout>
 
 <script>
+  import { previewHost, previewImage } from "../lib/preview";
+
+  /*
+   * Hovering a company shows a fresh screenshot of its website above the link. Touch screens
+   * skip it: a tap should just follow the link. Nothing is requested until the first hover.
+   */
+  const card = document.querySelector<HTMLElement>("[data-preview-card]");
+  const shot = card?.querySelector("img");
+  const host = card?.querySelector<HTMLElement>(".site-preview-host");
+  if (card && shot && host && matchMedia("(hover: hover)").matches) {
+    const GAP = 12;
+    const EDGE = 8;
+    shot.addEventListener("load", () => card.toggleAttribute("data-loaded", true));
+    /* If the screenshot can't be made (rate limit, site down), quietly drop the card. */
+    shot.addEventListener("error", () => card.toggleAttribute("data-failed", true));
+    const hide = () => card.removeAttribute("data-show");
+    for (const link of document.querySelectorAll<HTMLAnchorElement>("a[data-preview]")) {
+      link.addEventListener("pointerenter", () => {
+        const src = previewImage(link.href);
+        if (shot.getAttribute("src") !== src) {
+          card.removeAttribute("data-loaded");
+          card.removeAttribute("data-failed");
+          shot.src = src;
+        }
+        host.textContent = previewHost(link.href);
+        const box = link.getBoundingClientRect();
+        const { width, height } = card.getBoundingClientRect();
+        const left = Math.min(
+          Math.max(EDGE, box.left + box.width / 2 - width / 2),
+          innerWidth - width - EDGE,
+        );
+        const above = box.top - height - GAP >= EDGE;
+        card.style.left = `${left}px`;
+        card.style.top = `${above ? box.top - height - GAP : box.bottom + GAP}px`;
+        card.dataset.side = above ? "above" : "below";
+        card.toggleAttribute("data-show", true);
+      });
+      link.addEventListener("pointerleave", hide);
+    }
+    addEventListener("scroll", hide, { passive: true });
+  }
+
   /* The line draws itself once the chart is on screen, and the button pauses it and the pulse. */
   const chart = document.querySelector<HTMLElement>("[data-chart]");
   const pause = chart?.querySelector<HTMLButtonElement>("[data-chart-pause]");
@@ -378,6 +425,7 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
     --tap: 64px;
     --icon: 56px;
     --popover: 240px;
+    --preview: 320px;
 
     /* Motion */
     --duration: 150ms;
@@ -951,6 +999,89 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
     }
     .scheme:hover .tip {
       transition: opacity var(--duration) var(--ease);
+    }
+  }
+
+  /* Fixed to the viewport so it can sit over anything; JS places it above the hovered link. */
+  .site-preview {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    display: grid;
+    width: var(--preview);
+    padding: var(--space-1);
+    border: var(--hairline);
+    border-radius: var(--radius-lg);
+    corner-shape: squircle;
+    background: var(--bg);
+    box-shadow:
+      0 1px 2px light-dark(rgb(35 31 23 / 0.06), rgb(0 0 0 / 0.3)),
+      0 12px 32px -8px light-dark(rgb(35 31 23 / 0.2), rgb(0 0 0 / 0.6));
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+  }
+  .site-preview[data-show]:not([data-failed]) {
+    visibility: visible;
+    opacity: 1;
+  }
+  .site-preview-shot {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: var(--rule);
+  }
+  .site-preview-shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    opacity: 0;
+  }
+  .site-preview[data-loaded] img {
+    opacity: 1;
+  }
+  .site-preview-host {
+    padding: var(--space-1) var(--space-2) 0;
+    color: var(--muted);
+    font-size: var(--text-micro);
+    line-height: var(--leading-text);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .site-preview {
+      translate: 0 4px;
+      scale: 0.97;
+      transition:
+        opacity var(--duration) var(--ease),
+        translate var(--duration) var(--ease),
+        scale var(--duration) var(--ease),
+        visibility 0s var(--duration);
+    }
+    .site-preview[data-side="below"] {
+      translate: 0 -4px;
+    }
+    .site-preview[data-show]:not([data-failed]) {
+      translate: 0 0;
+      scale: 1;
+      transition:
+        opacity var(--duration) var(--ease),
+        translate var(--duration) var(--ease),
+        scale var(--duration) var(--ease);
+    }
+    .site-preview-shot img {
+      transition: opacity 300ms var(--ease);
+    }
+    /* A soft shimmer while the screenshot renders, which can take a few seconds the first time. */
+    .site-preview:not([data-loaded]) .site-preview-shot {
+      background: linear-gradient(100deg, var(--rule) 40%, var(--bg) 50%, var(--rule) 60%) 0 0 / 300%
+        100%;
+      animation: shimmer 1.4s linear infinite;
+    }
+  }
+  @keyframes shimmer {
+    to {
+      background-position: -150% 0;
     }
   }
 
