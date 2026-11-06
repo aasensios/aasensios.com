@@ -134,10 +134,10 @@ export const site = {
   ] satisfies ContactLink[],
 
   copy: {
-    headline: { text: "I make screens you can leave", emphasis: "calmly" },
+    headline: "I make screens you can leave.",
     intro: [
-      "Building digital products taught me one thing: the best interfaces get you what you need, then let you go.",
-      "Software is a tool, not the final goal itself. So I tend to cut steps, make the next action obvious, and keep things fast. The fewer minutes you spend with my screens, the better I've done my job.",
+      "Building digital products taught me one thing: good interfaces get you what you need, then let you go.",
+      "I see software as a tool, not as a goal itself. The goal has always been to automate the repetitive and boring things to regain time for what brings us joy. So I cut steps, make the next action obvious, and keep things fast. The fewer minutes you spend with my screens, the better I've done my job.",
     ],
     facts: (years: number) =>
       `I've been shipping software for more than ${years} years now. Based in Barcelona, working fully remote.`,
