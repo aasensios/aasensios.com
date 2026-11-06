@@ -107,13 +107,13 @@ export const site = {
       tag: "Hi",
       meme: "waving hello",
       gifs: [
-        { light: "oQzmXr9FploiZmZshV", dark: "O4NH6GvxpdJzelsLHm" },
+        { light: "oQzmXr9FploiZmZshV", dark: "tqRuohF5okcnb5O43s" },
         { light: "gLosUkC8d1UPEDGwWc", dark: "WdLOfUO196IOeWzKCj" },
-        { light: "pcwaLYOQb3xN6", dark: "N8kAcqsVEC6eeXcKV2" },
-        { light: "11LKx7277LkE0M", dark: "RySVSQ94mB3qr9IU2s" },
+        { light: "pcwaLYOQb3xN6", dark: "GsJ9XQD0iEcs7GhnJn" },
+        { light: "11LKx7277LkE0M", dark: "2zW5WSSp0umEHmqgTA" },
         { light: "zpsdW9e6rBQfPwTOxQ", dark: "d2jibZKKA0k3RUgU" },
         { light: "0vcCfc5y3MXCHzpzRw", dark: "fAPiZyw1Jxu4nalFJm" },
-        { light: "TFLlbP63EEn0JuimeE", dark: "KjQRCuPM8jfwZw7Tnk" },
+        { light: "z1yNjzRTCsCVW", dark: "X7Bckr1JaJS1opWTzO" },
       ],
     },
     {
