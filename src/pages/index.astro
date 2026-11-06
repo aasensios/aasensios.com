@@ -467,7 +467,13 @@ const place = (e: (typeof site.experience)[number], i: number) =>
       scrollTo(COUNT, false);
       return requestAnimationFrame(() => scrollTo(COUNT - 1, smooth));
     }
-    scrollTo((index + COUNT) % COUNT, smooth);
+    /* Far jumps start next to the target, so every move looks like a single swipe. */
+    const to = (index + COUNT) % COUNT;
+    if (smooth && !still() && Math.abs(to - from) > 1) {
+      scrollTo(to > from ? to - 1 : to + 1, false);
+      return requestAnimationFrame(() => scrollTo(to, true));
+    }
+    scrollTo(to, smooth);
   };
   const caption = pack?.querySelector<HTMLElement>("[data-pack-caption]");
   let captionTimer = 0;
