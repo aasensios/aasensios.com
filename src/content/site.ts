@@ -146,7 +146,7 @@ export const site = {
     pack: {
       open: "Meet the family",
       title: "Meet the family",
-      lede: "Dogs for daylight, cats for the mighty night. Each day brings a new pair to the buttons, and switching between light and dark swaps them. Copy any of them as a GIF or as a Giphy link.",
+      lede: "Dogs for daylight, cats for the mighty night. Each day brings a new pair to the buttons, and switching between light and dark swaps them.",
       close: "Close",
       prev: "Previous GIF",
       next: "Next GIF",
