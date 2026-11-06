@@ -1,5 +1,9 @@
-/** Logarithmic easing: fast early growth that levels off, 0 at t = 0 and 1 at t = 1. */
-export const logEase = (t: number) => Math.log1p(9 * t) / Math.log(10);
+/**
+ * Logarithmic easing: fast early growth that levels off, 0 at t = 0 and 1 at t = 1.
+ * Higher `steepness` front-loads more of the climb.
+ */
+export const logEase = (t: number, steepness = 40) =>
+  Math.log1p(steepness * t) / Math.log1p(steepness);
 
 const round = (n: number) => Math.round(n * 1000) / 1000;
 

@@ -7,7 +7,8 @@ describe("career curve", () => {
   it("eases logarithmically: steep early, level late", () => {
     expect(logEase(0)).toBe(0);
     expect(logEase(1)).toBeCloseTo(1, 10);
-    expect(logEase(0.25)).toBeGreaterThan(0.5);
+    expect(logEase(0.25)).toBeGreaterThan(0.6);
+    expect(logEase(0.25, 40)).toBeGreaterThan(logEase(0.25, 9));
   });
 
   it("runs from the bottom at the first job to the top today", () => {
