@@ -79,6 +79,11 @@ export const site = {
 
   projects: [
     {
+      title: "This portfolio",
+      repo: "https://github.com/aasensios/asensio.me",
+      year: 2026,
+    },
+    {
       title: "Google Forms clone",
       repo: "https://github.com/aasensios/google-forms-clone",
       year: 2026,
@@ -87,11 +92,6 @@ export const site = {
       title: "Gmail clone",
       repo: "https://github.com/aasensios/gmail-clone",
       year: 2021,
-    },
-    {
-      title: "Medical blog",
-      repo: "https://github.com/aasensios/medical-blog",
-      year: 2019,
     },
     {
       title: "Ocikitos",
