@@ -153,9 +153,10 @@ export const site = {
       pause: "Pause",
       play: "Play",
       copyLink: "Copy Giphy URL",
-      copyGif: "Copy GIF",
+      shareGif: "Share GIF",
       copiedLink: "Copied Giphy URL",
-      copiedGif: "Copied GIF",
+      downloadedGif: "Downloaded GIF",
+      shareAgain: "Ready. Tap again to share",
       themes: { light: "Day", dark: "Night" },
       days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
       review: {

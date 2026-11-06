@@ -303,11 +303,16 @@ const place = (e: (typeof site.experience)[number], i: number) =>
               <span class="pack-copied" role="status" data-pack-copied />
             </div>
             <div class="pack-actions">
-              <button type="button" data-copy-gif data-done={copy.pack.copiedGif}>
+              <button
+                type="button"
+                data-share-gif
+                data-downloaded={copy.pack.downloadedGif}
+                data-again={copy.pack.shareAgain}
+              >
                 <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                  <path d="M5.5 5.5V3.5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M3.5 5.5h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z" />
+                  <path d="M8 10V2.5M5 5.5l3-3 3 3M4.5 8H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1h-.5" />
                 </svg>
-                {copy.pack.copyGif}
+                {copy.pack.shareGif}
               </button>
               <button type="button" data-copy-link data-done={copy.pack.copiedLink}>
                 <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
@@ -339,7 +344,6 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                           width={gifSizes[s.id][0]}
                           height={gifSizes[s.id][1]}
                           loading="lazy"
-                          crossorigin="anonymous"
                         />
                       </picture>
                     </div>
@@ -650,7 +654,10 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     const slide = track?.children[current()] as HTMLElement | undefined;
     const gif = slide?.querySelector<HTMLElement>("[data-gif]");
     if (!slide || !gif) return null;
-    return { id: slide.dataset.candidate ?? gif.dataset.gif!, alt: gif.querySelector("img")?.alt ?? "" };
+    return {
+      id: slide.dataset.candidate ?? gif.dataset.gif!,
+      name: slide.dataset.key!.toLowerCase().replaceAll(" · ", "-"),
+    };
   };
   const copyLink = pack?.querySelector<HTMLButtonElement>("[data-copy-link]");
   copyLink?.addEventListener("click", async () => {
@@ -663,35 +670,57 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     }
     flash(copyLink.dataset.done!);
   });
-  const copyGif = pack?.querySelector<HTMLButtonElement>("[data-copy-gif]");
-  copyGif?.addEventListener("click", async () => {
+  /*
+   * Clipboards only take still images, so the real animated GIF goes out as a file instead:
+   * through the share sheet where there is one (phones, some desktops), otherwise as a download.
+   * Fetching starts as soon as a pointer or focus reaches the button, so the file is usually
+   * ready by the click; browsers only allow sharing right after a tap.
+   */
+  const shareGif = pack?.querySelector<HTMLButtonElement>("[data-share-gif]");
+  const files = new Map<string, Promise<File>>();
+  const fileFor = (gif: { id: string; name: string }) => {
+    if (!files.has(gif.id)) {
+      /* Giphy's downsized rendition stays under 2 MB; a few GIFs only have the original. */
+      const base = `https://media.giphy.com/media/${gif.id}`;
+      const file = fetch(`${base}/giphy-downsized.gif`)
+        .then((res) => (res.ok ? res : fetch(`${base}/giphy.gif`)))
+        .then((res) => (res.ok ? res.blob() : Promise.reject(new Error(res.statusText))))
+        .then((blob) => new File([blob], `${gif.name}.gif`, { type: "image/gif" }));
+      file.catch(() => files.delete(gif.id));
+      files.set(gif.id, file);
+    }
+    return files.get(gif.id)!;
+  };
+  for (const type of ["pointerenter", "pointerdown", "focus"]) {
+    shareGif?.addEventListener(type, () => {
+      const gif = onScreen();
+      if (gif) void fileFor(gif).catch(() => {});
+    });
+  }
+  shareGif?.addEventListener("click", async () => {
     const gif = onScreen();
     if (!gif) return;
-    const base = `https://media.giphy.com/media/${gif.id}`;
-    /*
-     * Browsers only put still images on the clipboard, so the GIF goes on as HTML (rich editors
-     * paste it animated) plus a PNG of its first frame for apps that only take pictures.
-     */
-    const frame = (async () => {
-      const still = new Image();
-      still.crossOrigin = "anonymous";
-      still.src = `${base}/giphy_s.gif`;
-      await still.decode();
-      const canvas = document.createElement("canvas");
-      canvas.width = still.naturalWidth;
-      canvas.height = still.naturalHeight;
-      canvas.getContext("2d")!.drawImage(still, 0, 0);
-      return new Promise<Blob>((resolve, reject) =>
-        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("No frame"))), "image/png"),
-      );
-    })();
-    const html = new Blob([`<img src="${base}/giphy.gif" alt="${gif.alt}">`], { type: "text/html" });
+    let file: File;
     try {
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": frame, "text/html": html })]);
+      file = await fileFor(gif);
     } catch {
       return;
     }
-    flash(copyGif.dataset.done!);
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+      } catch (error) {
+        /* Too long since the tap for the browser's liking: the file is ready now, so ask again. */
+        if ((error as DOMException).name === "NotAllowedError") flash(shareGif.dataset.again!);
+      }
+      return;
+    }
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(file);
+    link.download = file.name;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    flash(shareGif.dataset.downloaded!);
   });
 
   /*
