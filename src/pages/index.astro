@@ -344,6 +344,8 @@ const careerStops = site.experience
                         <img
                           src={gifStill(l.gifs[d][theme])}
                           alt={`A ${theme === "light" ? "dog" : "cat"} ${l.meme}`}
+                          width={gifSizes[l.gifs[d][theme]][0]}
+                          height={gifSizes[l.gifs[d][theme]][1]}
                           loading="lazy"
                         />
                       </picture>
@@ -488,7 +490,32 @@ const careerStops = site.experience
     const items = pack?.querySelector<HTMLTemplateElement>("[data-pack-items]");
     if (grid && items && !grid.childElementCount) grid.append(items.content.cloneNode(true));
     pack?.showModal();
+    layoutPack();
   });
+  /*
+   * Masonry in reading order: each GIF, Monday first, goes into whichever column is
+   * shortest so far, so the week runs across rows. Heights come from the GIFs' known sizes.
+   */
+  let packColumns = 0;
+  const layoutPack = () => {
+    const grid = pack?.querySelector<HTMLElement>("[data-pack-grid]");
+    if (!grid?.clientWidth) return;
+    const count = Math.max(1, Math.floor((grid.clientWidth + 12) / (180 + 12)));
+    if (count === packColumns) return;
+    packColumns = count;
+    const figures = [...grid.querySelectorAll<HTMLElement>(".pack-item")];
+    const columns = Array.from({ length: count }, () => document.createElement("div"));
+    const heights = columns.map(() => 0);
+    for (const figure of figures) {
+      const img = figure.querySelector("img")!;
+      const i = heights.indexOf(Math.min(...heights));
+      columns[i].append(figure);
+      heights[i] += Number(img.getAttribute("height")) / Number(img.getAttribute("width")) + 0.2;
+    }
+    for (const column of columns) column.className = "pack-column";
+    grid.replaceChildren(...columns);
+  };
+  addEventListener("resize", () => pack?.open && layoutPack());
   pack?.addEventListener("click", (event) => {
     if (event.target === pack) pack.close();
   });
@@ -530,7 +557,10 @@ const careerStops = site.experience
     const copyButton = reviewBar.querySelector<HTMLButtonElement>("[data-review-copy]")!;
     const label = copyButton.textContent;
     copyButton.addEventListener("click", async () => {
-      const order = [...pack.querySelectorAll<HTMLElement>(".pack-item")].map((i) => i.dataset.key!);
+      const template = pack.querySelector<HTMLTemplateElement>("[data-pack-items]")!;
+      const order = [...template.content.querySelectorAll<HTMLElement>(".pack-item")].map(
+        (i) => i.dataset.key!,
+      );
       const lines = order.filter((key) => marks.has(key)).map((key) => `* ${key}`);
       await navigator.clipboard.writeText([copyButton.dataset.request, ...lines].join("\n"));
       copyButton.textContent = copyButton.dataset.copied!;
@@ -798,25 +828,20 @@ const careerStops = site.experience
     outline: var(--focus-ring);
     outline-offset: var(--focus-offset);
   }
-  /* Masonry via grid lanes where supported, CSS columns elsewhere. */
   .pack-grid {
-    columns: 3 180px;
-    column-gap: var(--space-3);
+    display: flex;
+    align-items: start;
+    gap: var(--space-3);
+  }
+  .pack-grid :global(.pack-column) {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
   }
   .pack-item {
-    margin: 0 0 var(--space-3);
-    break-inside: avoid;
-  }
-  @supports (display: grid-lanes) {
-    .pack-grid {
-      display: grid-lanes;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: var(--space-3);
-      columns: auto;
-    }
-    .pack-item {
-      margin: 0;
-    }
+    margin: 0;
   }
   .pack-item img {
     display: block;
