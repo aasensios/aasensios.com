@@ -1328,8 +1328,6 @@ const careerStops = site.experience
   }
   /* Contact buttons: the one place on the page that asks for a click, so they get to play. */
   .cta {
-    --tilt: -2deg;
-
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -1347,13 +1345,9 @@ const careerStops = site.experience
     background: var(--fg);
     color: var(--bg);
   }
-  .cta + .cta {
-    --tilt: 2deg;
-  }
   .cta:hover {
     border-color: var(--fg);
     translate: 0 -2px;
-    rotate: var(--tilt);
     box-shadow: 0 6px 0 -2px light-dark(rgb(35 31 23 / 0.15), rgb(0 0 0 / 0.5));
   }
   .cta:active {
@@ -1416,7 +1410,6 @@ const careerStops = site.experience
     .cta {
       transition:
         translate var(--duration) var(--ease),
-        rotate 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
         scale var(--duration) var(--ease),
         box-shadow var(--duration) var(--ease),
         border-color var(--duration) var(--ease);

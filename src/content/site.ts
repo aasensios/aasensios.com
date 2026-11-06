@@ -21,7 +21,7 @@ export type Project = {
 
 export type Link = { label: string; href: string };
 
-/** Giphy ids for the meme on each contact button, one per theme. */
+/** Giphy ids for the meme on each contact button: dogs in light mode, cats in dark mode. */
 export type ContactLink = Link & { gif: { light: string; dark: string } };
 
 export const site = {
@@ -100,14 +100,14 @@ export const site = {
     {
       label: "Say hi on LinkedIn",
       href: "https://www.linkedin.com/in/aasensios/",
-      // Placeholder pick until the final pair is chosen: "Well hi!" cat / "Hi" cat on black.
-      gif: { light: "Y1Y1vtdiJGKeFNsSwe", dark: "t9JuXrkQGVeUaK7rbl" },
+      // A dog waving its paw / a wide-eyed cat with a big "Hi" on black.
+      gif: { light: "0vcCfc5y3MXCHzpzRw", dark: "t9JuXrkQGVeUaK7rbl" },
     },
     {
       label: "See my work on GitHub",
       href: "https://github.com/aasensios",
-      // Cat in glasses at a computer / the classic typing cat.
-      gif: { light: "VbnUQpnihPSIgIXuZv", dark: "JIX9t2j0ZTN9S" },
+      // The "I have no idea what I'm doing" dog at a laptop / the classic typing cat.
+      gif: { light: "SwImQhtiNA7io", dark: "JIX9t2j0ZTN9S" },
     },
   ] satisfies ContactLink[],
 
