@@ -248,6 +248,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
     /* Lines */
     --hairline: 1px solid var(--rule);
     --focus-ring: 1px solid var(--fg);
+    --focus-offset: 2px;
     --underline: 1px;
     --underline-hover: 2px;
     --underline-offset: 3px;
@@ -288,7 +289,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
   }
   .page a:focus-visible {
     outline: var(--focus-ring);
-    outline-offset: var(--underline-offset);
+    outline-offset: var(--focus-offset);
   }
 
   .wrap {
@@ -501,7 +502,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
   }
   .scheme button:focus-visible {
     outline: var(--focus-ring);
-    outline-offset: 2px;
+    outline-offset: var(--focus-offset);
   }
   .sky {
     view-transition-name: theme-icon;
