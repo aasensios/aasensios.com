@@ -22,7 +22,7 @@ const logos = import.meta.glob<SvgComponent>("../assets/logos/*.svg", {
 });
 const logo = (file: string) => logos[`../assets/logos/${file}`];
 /* Career line geometry, in viewBox units: x is percent of the axis, y is pixels of the plot. */
-const PLOT = 144;
+const PLOT = 128;
 /*
  * Memes are CSS backgrounds, not <img>s: browsers never fetch a background for an element
  * that isn't rendered, so only today's meme in the current theme is downloaded.
@@ -42,7 +42,7 @@ const gifVars = (day: DayGif) =>
 const first = site.experience.at(-1)!;
 const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left;
 const span = 100 - origin;
-const yAt = (x: number) => careerY(x, { from: origin, top: 18, bottom: PLOT - 14 });
+const yAt = (x: number) => careerY(x, { from: origin, top: 14, bottom: PLOT - 10 });
 const GLINT_W = 8;
 const GLINT_H = 3;
 /* The glint follows the curve through four waypoints along the current job. */
@@ -1026,14 +1026,14 @@ const careerStops = site.experience
     --stop: 12px;
     --logo: 28px;
     --logo-mark: 20px;
-    --axis: 32px;
+    --axis: 28px;
     --dimmed: 0.3;
     --inset-x: var(--space-3);
     --inset-y: var(--space-2);
 
     position: relative;
     margin-top: var(--flow);
-    padding: var(--inset-y) var(--inset-x) 0;
+    padding: var(--inset-y) var(--inset-x) var(--space-2);
     border: var(--hairline);
     border-radius: var(--radius-xl);
     corner-shape: squircle;
@@ -1205,7 +1205,7 @@ const careerStops = site.experience
   }
   .chart-tool {
     position: absolute;
-    right: var(--space-3);
+    right: var(--space-4);
     bottom: calc(var(--axis) + var(--space-2));
     z-index: 3;
   }
@@ -1822,8 +1822,8 @@ const careerStops = site.experience
       padding: var(--space-16) var(--space-8) var(--space-14);
     }
     .chart {
-      --inset-x: var(--space-6);
-      --inset-y: var(--space-4);
+      --inset-x: var(--space-5);
+      --inset-y: var(--space-3);
     }
   }
 </style>
