@@ -1461,9 +1461,11 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     gap: var(--space-3);
     width: max-content;
     max-width: var(--card);
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
     border: var(--hairline);
-    border-radius: var(--radius-md);
+    /* Concentric with the logo tucked in its top-left corner. */
+    border-radius: calc(var(--radius-md) + var(--space-2) + 1px);
+    corner-shape: squircle;
     background: var(--bg);
     font-size: var(--text-caption);
     line-height: var(--leading-text);
@@ -1670,7 +1672,8 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     width: var(--preview);
     padding: var(--space-1);
     border: var(--hairline);
-    border-radius: var(--radius-lg);
+    /* Concentric with the screenshot: its radius plus the padding and border between them. */
+    border-radius: calc(var(--radius-md) + var(--space-1) + 1px);
     corner-shape: squircle;
     background: var(--bg);
     box-shadow:
@@ -1688,6 +1691,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     aspect-ratio: 16 / 10;
     overflow: hidden;
     border-radius: var(--radius-md);
+    corner-shape: squircle;
     background: var(--rule);
   }
   .site-preview-shot :global(img) {
@@ -1844,7 +1848,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     z-index: 5;
     padding: var(--space-1);
     border: var(--hairline);
-    border-radius: var(--radius-lg);
+    border-radius: calc(var(--radius-md) + var(--space-1) + 1px);
     corner-shape: squircle;
     background: var(--bg);
     box-shadow:
@@ -1858,6 +1862,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     width: var(--gif);
     aspect-ratio: var(--ratio);
     border-radius: var(--radius-md);
+    corner-shape: squircle;
   }
   .cta:focus-visible .cta-card {
     visibility: visible;
