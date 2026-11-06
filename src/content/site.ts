@@ -115,7 +115,7 @@ export const site = {
         { light: "Xev2JdopBxGj1LuGvt", dark: "usZjWKAwsRkfbekTAv" },
         { light: "KGkndti4sm8XNrai1t", dark: "kTU7lCo3d4OAPJ0zau" },
         { light: "zpsdW9e6rBQfPwTOxQ", dark: "j93ycvEyWlSIIg8AEl" },
-        { light: "0vcCfc5y3MXCHzpzRw", dark: "t9JuXrkQGVeUaK7rbl" },
+        { light: "0vcCfc5y3MXCHzpzRw", dark: "3UkqVq3F50bVCi9URl" },
         { light: "hrWcZNce6izCScj9xn", dark: "1in10D39NhoNq" },
       ],
     },
