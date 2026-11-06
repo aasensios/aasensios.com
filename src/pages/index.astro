@@ -271,8 +271,8 @@ const careerStops = site.experience
         </section>
 
         <section>
-          <h2>{copy.sections.links}</h2>
-          <p class="links">
+          <p class="links" data-fluid>
+            <span class="fluid" aria-hidden="true" />
             {
               site.links.map((l) => (
                 <a class="cta" href={l.href} target="_blank" rel="noopener">
@@ -286,7 +286,7 @@ const careerStops = site.experience
                       <span class={`shot day day-${d}`} style={gifVars(day)} />
                     ))}
                   </span>
-                  {l.label}
+                  <span class="cta-label">{l.label}</span>
                 </a>
               ))
             }
@@ -405,6 +405,28 @@ const careerStops = site.experience
 
 <script>
   import { previewHost, previewImage } from "../lib/preview";
+
+  const fluidGroup = document.querySelector<HTMLElement>("[data-fluid]");
+  const fluid = fluidGroup?.querySelector<HTMLElement>(".fluid");
+  if (fluidGroup && fluid) {
+    const still = matchMedia("(prefers-reduced-motion: reduce)");
+    const moveTo = (target: HTMLElement) => {
+      const entering = !fluid.hasAttribute("data-on");
+      fluid.style.transitionProperty = entering || still.matches ? "opacity" : "";
+      fluid.style.setProperty("--fluid-x", `${target.offsetLeft}px`);
+      fluid.style.setProperty("--fluid-y", `${target.offsetTop}px`);
+      fluid.style.setProperty("--fluid-w", `${target.offsetWidth}px`);
+      fluid.style.setProperty("--fluid-h", `${target.offsetHeight}px`);
+      fluid.toggleAttribute("data-on", true);
+    };
+    const leave = () => fluid.removeAttribute("data-on");
+    for (const cta of fluidGroup.querySelectorAll<HTMLElement>(".cta")) {
+      cta.addEventListener("pointerenter", () => moveTo(cta));
+      cta.addEventListener("focus", () => cta.matches(":focus-visible") && moveTo(cta));
+      cta.addEventListener("blur", leave);
+    }
+    fluidGroup.addEventListener("pointerleave", leave);
+  }
 
 
   const card = document.querySelector<HTMLElement>("[data-preview-card]");
@@ -1661,6 +1683,7 @@ const careerStops = site.experience
     }
   }
   .links {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
@@ -1669,22 +1692,47 @@ const careerStops = site.experience
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
     height: var(--space-12);
     padding: 0 var(--space-5) 0 calc(var(--cta-shot) + var(--space-2));
-    border: var(--hairline);
     border-radius: var(--radius-pill);
-    background: var(--bg);
+    background: color-mix(in oklab, var(--fg) 6%, transparent);
     color: var(--fg);
     font-weight: var(--weight-medium);
   }
-  .cta:first-child {
-    border-color: var(--fg);
-    background: var(--fg);
-    color: var(--bg);
+  /* Fluid hover: one shared highlight glides between the buttons, under their content. */
+  .fluid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    width: var(--fluid-w, 0);
+    height: var(--fluid-h, 0);
+    border-radius: var(--radius-pill);
+    background: color-mix(in oklab, var(--fg) 9%, transparent);
+    translate: var(--fluid-x, 0) var(--fluid-y, 0);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 60ms linear;
   }
-  .cta:hover {
-    border-color: var(--fg);
+  .fluid[data-on] {
+    opacity: 1;
+    transition: opacity 80ms linear;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .fluid[data-on] {
+      transition:
+        opacity 80ms linear,
+        translate 160ms cubic-bezier(0.2, 0, 0, 1),
+        width 160ms cubic-bezier(0.2, 0, 0, 1),
+        height 160ms cubic-bezier(0.2, 0, 0, 1);
+    }
+  }
+  .cta-label,
+  .cta-gif {
+    z-index: 2;
+  }
+  .cta-label {
+    position: relative;
   }
   .cta:active {
     scale: 0.97;
