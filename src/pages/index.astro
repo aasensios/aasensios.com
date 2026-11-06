@@ -5,7 +5,7 @@ import Moon from "../assets/icons/moon.svg";
 import Sun from "../assets/icons/sun.svg";
 import Layout from "@layouts/layout.astro";
 import avatar from "../assets/avatar.jpg";
-import { site } from "../content/site";
+import { site, type DayGif } from "../content/site";
 import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
 import { gifAnimated, gifStill } from "../lib/gif";
 import { axisYears, barPosition, trackPath } from "../lib/timeline";
@@ -22,6 +22,17 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
 /* Career line geometry, in viewBox units: x is percent of the axis, y is pixels of a lane. */
 const LANE = 36;
 const CURVE = 2.5;
+/*
+ * Memes are CSS backgrounds, not <img>s: browsers never fetch a background for an element
+ * that isn't rendered, so only today's meme in the current theme is downloaded.
+ */
+const gifVars = (day: DayGif) =>
+  [
+    `--still-light:url(${gifStill(day.light)})`,
+    `--still-dark:url(${gifStill(day.dark)})`,
+    `--play-light:url(${gifAnimated(day.light)})`,
+    `--play-dark:url(${gifAnimated(day.dark)})`,
+  ].join(";");
 /* The line draws itself at a steady pace through time, from the first job to today. */
 const first = site.experience.at(-1)!;
 const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left - CURVE * 2;
@@ -260,24 +271,13 @@ const careerStops = site.experience
               site.links.map((l) => (
                 <a class="cta" href={l.href} target="_blank" rel="noopener">
                   <span class="cta-gif" aria-hidden="true">
-                    {(["light", "dark"] as const).map((theme) => (
-                      <span class={`${theme}-only`}>
-                        <img src={gifStill(l.gif[theme])} alt="" width="32" height="32" loading="lazy" />
-                      </span>
+                    {l.gifs.map((day, d) => (
+                      <span class={`shot day day-${d}`} style={gifVars(day)} />
                     ))}
                   </span>
                   <span class="cta-card" aria-hidden="true">
-                    {(["light", "dark"] as const).map((theme) => (
-                      <span class={`${theme}-only`}>
-                        <img
-                          src={gifStill(l.gif[theme])}
-                          data-animated={gifAnimated(l.gif[theme])}
-                          alt=""
-                          width="200"
-                          height="150"
-                          loading="lazy"
-                        />
-                      </span>
+                    {l.gifs.map((day, d) => (
+                      <span class={`shot day day-${d}`} style={gifVars(day)} />
                     ))}
                   </span>
                   {l.label}
@@ -313,22 +313,6 @@ const careerStops = site.experience
 <script>
   import { previewHost, previewImage } from "../lib/preview";
 
-  /*
-   * Contact buttons show a still frame of their meme; the card plays it on hover or focus.
-   * The animation is only fetched then, and never with reduced motion (the card keeps the still).
-   */
-  if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
-    for (const cta of document.querySelectorAll<HTMLElement>(".cta")) {
-      const play = () => {
-        for (const img of cta.querySelectorAll<HTMLImageElement>("img[data-animated]")) {
-          img.src = img.dataset.animated!;
-          img.removeAttribute("data-animated");
-        }
-      };
-      cta.addEventListener("pointerenter", play, { once: true });
-      cta.addEventListener("focus", play, { once: true });
-    }
-  }
 
   /*
    * Hovering a company shows a fresh screenshot of its website above the link. Touch screens
@@ -1338,15 +1322,39 @@ const careerStops = site.experience
   .page .cta:focus-visible {
     outline-offset: var(--focus-offset);
   }
-  /* A still frame of the meme where an icon would go; the full GIF waits in the card. */
-  .cta-gif img {
+  /* Each day's meme, as a still frame by default; the theme picks the dog or the cat. */
+  .shot {
+    --still: var(--still-light);
+    --play: var(--play-light);
+
+    background: var(--rule) var(--still) center / cover no-repeat;
+  }
+  :global([data-theme="dark"]) .shot {
+    --still: var(--still-dark);
+    --play: var(--play-dark);
+  }
+  /* Only today's meme is rendered, so only today's is ever downloaded. */
+  .day {
+    display: none;
+  }
+  :global(:root[data-day="0"]) .day-0,
+  :global(:root[data-day="1"]) .day-1,
+  :global(:root[data-day="2"]) .day-2,
+  :global(:root[data-day="3"]) .day-3,
+  :global(:root[data-day="4"]) .day-4,
+  :global(:root[data-day="5"]) .day-5,
+  :global(:root[data-day="6"]) .day-6,
+  :global(:root:not([data-day])) .day-1 {
+    display: block;
+  }
+  /* A still frame where an icon would go; the card above plays the whole GIF. */
+  .cta-gif .shot {
     width: var(--space-8);
     height: var(--space-8);
     border-radius: 50%;
-    object-fit: cover;
     box-shadow: 0 0 0 2px var(--bg);
   }
-  .cta:first-child .cta-gif img {
+  .cta:first-child .cta-gif .shot {
     box-shadow: 0 0 0 2px var(--fg);
   }
   .cta-card {
@@ -1366,14 +1374,10 @@ const careerStops = site.experience
     visibility: hidden;
     opacity: 0;
   }
-  .cta-card img {
-    display: block;
+  .cta-card .shot {
     width: var(--gif);
-    height: auto;
     aspect-ratio: 4 / 3;
     border-radius: var(--radius-md);
-    object-fit: cover;
-    background: var(--rule);
   }
   .cta:focus-visible .cta-card {
     visibility: visible;
@@ -1387,6 +1391,15 @@ const careerStops = site.experience
     }
   }
   @media (prefers-reduced-motion: no-preference) {
+    /* The animation loads on first show, over the still; reduced motion keeps the still. */
+    .cta:focus-visible .cta-card .shot {
+      background-image: var(--play), var(--still);
+    }
+    @media (hover: hover) {
+      .cta:hover .cta-card .shot {
+        background-image: var(--play), var(--still);
+      }
+    }
     .cta {
       transition:
         translate var(--duration) var(--ease),

@@ -21,8 +21,16 @@ export type Project = {
 
 export type Link = { label: string; href: string };
 
-/** Giphy ids for the meme on each contact button: dogs in light mode, cats in dark mode. */
-export type ContactLink = Link & { gif: { light: string; dark: string } };
+/** Giphy ids for one day's meme on a contact button: a dog in light mode, a cat in dark mode. */
+export type DayGif = { light: string; dark: string };
+
+/**
+ * Seven days of memes, indexed like `Date#getDay()`: Sunday first. The visitor's local
+ * day picks one, and the page switches to the next at their local midnight.
+ */
+export type Week = [DayGif, DayGif, DayGif, DayGif, DayGif, DayGif, DayGif];
+
+export type ContactLink = Link & { gifs: Week };
 
 export const site = {
   name: "Alejandro Asensio",
@@ -100,14 +108,30 @@ export const site = {
     {
       label: "Say hi on LinkedIn",
       href: "https://www.linkedin.com/in/aasensios/",
-      // A dog waving its paw / a wide-eyed cat with a big "Hi" on black.
-      gif: { light: "0vcCfc5y3MXCHzpzRw", dark: "t9JuXrkQGVeUaK7rbl" },
+      // Dogs and cats waving hello.
+      gifs: [
+        { light: "lv8qrl7TTuFj6QN3bM", dark: "ToMjGpRZ4gF6YuAT4li" },
+        { light: "lsPxvZZHb7h1Y01oeA", dark: "125E8v90blHqtr4HrB" },
+        { light: "Xev2JdopBxGj1LuGvt", dark: "usZjWKAwsRkfbekTAv" },
+        { light: "KGkndti4sm8XNrai1t", dark: "kTU7lCo3d4OAPJ0zau" },
+        { light: "zpsdW9e6rBQfPwTOxQ", dark: "j93ycvEyWlSIIg8AEl" },
+        { light: "0vcCfc5y3MXCHzpzRw", dark: "t9JuXrkQGVeUaK7rbl" },
+        { light: "hrWcZNce6izCScj9xn", dark: "1in10D39NhoNq" },
+      ],
     },
     {
       label: "See my work on GitHub",
       href: "https://github.com/aasensios",
-      // The "I have no idea what I'm doing" dog at a laptop / the classic typing cat.
-      gif: { light: "SwImQhtiNA7io", dark: "JIX9t2j0ZTN9S" },
+      // Dogs and cats hard at work on a computer.
+      gifs: [
+        { light: "SX71qs3TDxVkvbLJ4o", dark: "VbnUQpnihPSIgIXuZv" },
+        { light: "kudIERso2pFiE", dark: "3oKIPnAiaMCws8nOsE" },
+        { light: "3o7TKU1Lzv3AURPVN6", dark: "aNqEFrYVnsS52" },
+        { light: "uCl0snPnLDRV2FYMXB", dark: "10RhccNxPSaglW" },
+        { light: "ChpOyeacGmpQk", dark: "13HBDT4QSTpveU" },
+        { light: "SwImQhtiNA7io", dark: "JIX9t2j0ZTN9S" },
+        { light: "XMehCKG4rsrGh9BTAT", dark: "4a5b4AH9TG7zEgsEEe" },
+      ],
     },
   ] satisfies ContactLink[],
 

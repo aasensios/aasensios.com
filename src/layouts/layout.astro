@@ -48,6 +48,19 @@ const { title, description } = Astro.props;
       (() => {
         const root = document.documentElement;
         root.dataset.js = "";
+        /* The contact memes change with the visitor's local day, so pick it before paint. */
+        const setDay = () => {
+          root.dataset.day = String(new Date().getDay());
+          const midnight = new Date();
+          midnight.setHours(24, 0, 0, 0);
+          clearTimeout(setDay.timer);
+          setDay.timer = setTimeout(setDay, midnight.getTime() - Date.now() + 1000);
+        };
+        setDay();
+        /* Timers stall while a laptop sleeps, so check again whenever the tab comes back. */
+        addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") setDay();
+        });
         const prefersDark = matchMedia("(prefers-color-scheme: dark)");
         let picked = false;
         const apply = (theme) => {
