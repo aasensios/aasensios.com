@@ -1047,12 +1047,12 @@ const careerStops = site.experience
   .grid span + span {
     border-left: 1px dashed var(--rule);
   }
+  /* One stacking context for the plot, so every node sits above every slice of the line. */
   .lanes {
     position: relative;
-    margin-top: 0;
-  }
-  .lanes {
+    isolation: isolate;
     height: var(--plot);
+    margin-top: 0;
   }
   /* Every lane spans the whole plot so its slice of the curve shares one coordinate space;
      only its column of time takes the pointer. */
@@ -1096,6 +1096,7 @@ const careerStops = site.experience
   }
   .stop {
     left: var(--left);
+    z-index: 2;
     border: var(--stroke) solid var(--line);
     background: var(--bg);
   }
@@ -1128,6 +1129,7 @@ const careerStops = site.experience
     --halo: rgb(255 180 60 / 0.6);
 
     top: var(--y-end);
+    z-index: 2;
     left: calc(var(--left) + var(--width));
     width: var(--space-6);
     height: var(--space-6);
@@ -1141,17 +1143,18 @@ const careerStops = site.experience
     height: var(--space-6);
     filter: drop-shadow(0 0 3px var(--halo));
   }
-  .lanes:has(.lane:is(:hover, [data-open])) .lane:not(:hover, [data-open]) :is(.track, .stop, .now) {
+  .lanes:has(.lane:is(:hover, [data-open])) .lane:not(:hover, [data-open]) :is(.track, .now) {
     opacity: var(--dimmed);
   }
-  .lane:is(:hover, [data-open]) {
-    z-index: 2;
+  /* Dimmed nodes fade their ring colour, not their fill, so they stay solid circles. */
+  .lanes:has(.lane:is(:hover, [data-open])) .lane:not(:hover, [data-open]) .stop {
+    border-color: color-mix(in oklab, var(--line) 30%, var(--bg));
   }
   .card {
     position: absolute;
     top: calc(var(--y-start) + var(--space-3));
     left: clamp(0px, calc(var(--left) - var(--space-4)), calc(100% - var(--popover)));
-    z-index: 1;
+    z-index: 4;
     display: flex;
     align-items: center;
     gap: var(--space-3);
@@ -1200,13 +1203,11 @@ const careerStops = site.experience
   .card-meta {
     color: var(--muted);
   }
-  /* Centred across the chart, low enough to sit under the curve rather than on it. */
   .chart-tool {
     position: absolute;
-    top: calc(var(--plot) * 0.72);
-    left: 50%;
+    right: var(--space-3);
+    bottom: calc(var(--axis) + var(--space-2));
     z-index: 3;
-    translate: -50% -50%;
   }
   .replay {
     visibility: hidden;
@@ -1245,9 +1246,9 @@ const careerStops = site.experience
   }
   .tool-tip {
     position: absolute;
-    top: calc(100% + var(--space-2));
-    left: 50%;
-    translate: -50% 0;
+    top: 50%;
+    right: calc(100% + var(--space-2));
+    translate: 0 -50%;
     width: max-content;
     padding: var(--space-1) var(--space-2);
     border: var(--hairline);
@@ -1283,9 +1284,11 @@ const careerStops = site.experience
   }
   @media (prefers-reduced-motion: no-preference) {
     .track,
-    .stop,
     .now {
       transition: opacity var(--duration) var(--ease);
+    }
+    .stop {
+      transition: border-color var(--duration) var(--ease);
     }
     .card {
       transition:
@@ -1678,6 +1681,9 @@ const careerStops = site.experience
     color: var(--fg);
     font-weight: var(--weight-medium);
   }
+  .cta:hover {
+    background: color-mix(in oklab, var(--fg) 11%, transparent);
+  }
   .cta:active {
     scale: 0.97;
   }
@@ -1765,8 +1771,8 @@ const careerStops = site.experience
     }
     .cta {
       transition:
-        scale var(--duration) var(--ease),
-        border-color var(--duration) var(--ease);
+        background-color var(--duration) var(--ease),
+        scale var(--duration) var(--ease);
     }
     .cta-card {
       translate: 0 6px;
