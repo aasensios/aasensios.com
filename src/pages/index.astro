@@ -20,7 +20,7 @@ const logos = import.meta.glob<SvgComponent>("../assets/logos/*.svg", {
 const logo = (file: string) => logos[`../assets/logos/${file}`];
 /* Career line geometry, in viewBox units: x is percent of the axis, y is pixels of a lane. */
 const LANE = 36;
-const CURVE = 1.2;
+const CURVE = 2.5;
 /* The line draws itself at a steady pace through time, from the first job to today. */
 const first = site.experience.at(-1)!;
 const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left - CURVE * 2;
@@ -120,20 +120,35 @@ const careerStops = site.experience
             style={`--years:${axis.length};--lane:${LANE}px;--origin:${origin.toFixed(3)}%`}
             data-chart
           >
-            <button
-              type="button"
-              class="chart-pause"
-              aria-label={copy.chart.pause}
-              aria-pressed="false"
-              data-chart-pause
-            >
-              <svg class="icon-pause" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                <path d="M5.5 3.5v9M10.5 3.5v9" />
-              </svg>
-              <svg class="icon-play" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                <path d="M5 3.5v9l7.5-4.5z" />
-              </svg>
-            </button>
+            <div class="chart-tools">
+              <span class="chart-tool">
+                <button
+                  type="button"
+                  aria-label={copy.chart.pause}
+                  aria-pressed="false"
+                  data-chart-pause
+                >
+                  <svg class="icon-pause" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path d="M5.5 3.5v9M10.5 3.5v9" />
+                  </svg>
+                  <svg class="icon-play" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path class="filled" d="M5 3.5v9l7.5-4.5z" />
+                  </svg>
+                </button>
+                <span class="tool-tip" aria-hidden="true">
+                  <span class="when-running">{copy.chart.tips.pause}</span>
+                  <span class="when-paused">{copy.chart.tips.play}</span>
+                </span>
+              </span>
+              <span class="chart-tool">
+                <button type="button" aria-label={copy.chart.replay} data-chart-replay>
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path d="M3.5 8a4.5 4.5 0 1 0 1.32-3.18M4.5 2.5v2.5H7" />
+                  </svg>
+                </button>
+                <span class="tool-tip" aria-hidden="true">{copy.chart.tips.replay}</span>
+              </span>
+            </div>
             <div class="grid" aria-hidden="true">
               {axis.map(() => (
                 <span />
@@ -205,7 +220,18 @@ const careerStops = site.experience
                           <Logo width={18} height={18} aria-hidden="true" />
                         </span>
                       </span>
-                      {!e.end && <span class="now" />}
+                      {
+                        !e.end && (
+                          <span class="now">
+                            <span class="light-only">
+                              <Sun aria-hidden="true" />
+                            </span>
+                            <span class="dark-only">
+                              <Moon aria-hidden="true" />
+                            </span>
+                          </span>
+                        )
+                      }
                       <span class="card">
                         <span class="card-logo">
                           <Logo width={20} height={20} aria-hidden="true" />
@@ -349,6 +375,14 @@ const careerStops = site.experience
   pause?.addEventListener("click", () => {
     const paused = chart!.toggleAttribute("data-paused");
     pause.setAttribute("aria-pressed", String(paused));
+  });
+  /* Replay drops every animation for one frame of style, then lets them all start over. */
+  chart?.querySelector("[data-chart-replay]")?.addEventListener("click", () => {
+    chart.removeAttribute("data-paused");
+    pause?.setAttribute("aria-pressed", "false");
+    chart.toggleAttribute("data-replay", true);
+    chart.getBoundingClientRect();
+    chart.removeAttribute("data-replay");
   });
 
   /* On touch screens a tap opens a lane's card; tapping it again or anywhere else closes it. */
@@ -721,10 +755,22 @@ const careerStops = site.experience
     width: 18px;
     height: 18px;
   }
+  /* Today is the same sun or moon as the theme toggle, glowing softly. */
   .now {
+    --halo: rgb(255 180 60 / 0.6);
+
     left: calc(var(--left) + var(--width));
-    background: var(--line);
-    box-shadow: 0 0 0 var(--stroke) var(--bg);
+    width: var(--space-6);
+    height: var(--space-6);
+  }
+  :global([data-theme="dark"]) .now {
+    --halo: rgb(255 255 255 / 0.45);
+  }
+  .now svg {
+    display: block;
+    width: var(--space-6);
+    height: var(--space-6);
+    filter: drop-shadow(0 0 3px var(--halo));
   }
   .lanes:has(.lane:is(:hover, [data-open])) .lane:not(:hover, [data-open]) :is(.track, .stop, .now) {
     opacity: var(--dimmed);
@@ -785,11 +831,18 @@ const careerStops = site.experience
   .card-meta {
     color: var(--muted);
   }
-  .chart-pause {
+  .chart-tools {
     position: absolute;
     top: var(--space-2);
     left: var(--space-2);
     z-index: 3;
+    display: flex;
+    gap: var(--space-1);
+  }
+  .chart-tool {
+    position: relative;
+  }
+  .chart-tool button {
     display: grid;
     place-items: center;
     width: var(--space-8);
@@ -798,27 +851,56 @@ const careerStops = site.experience
     color: var(--muted);
     cursor: pointer;
   }
-  .chart-pause:hover,
-  .chart-pause:focus-visible {
+  .chart-tool button:hover,
+  .chart-tool button:focus-visible {
     color: var(--fg);
   }
-  .chart-pause:focus-visible {
+  .chart-tool button:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-offset);
   }
-  .chart-pause path {
+  .chart-tool path {
     fill: none;
     stroke: currentColor;
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  .chart-pause .icon-play path {
+  .chart-tool path.filled {
     fill: currentColor;
   }
-  .chart-pause[aria-pressed="true"] .icon-pause,
-  .chart-pause[aria-pressed="false"] .icon-play {
+  [aria-pressed="true"] .icon-pause,
+  [aria-pressed="false"] .icon-play,
+  .chart[data-paused] .when-running,
+  .chart:not([data-paused]) .when-paused {
     display: none;
+  }
+  /* Same look as the theme toggle's tip; shown for a real pointer or keyboard focus. */
+  .tool-tip {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: 0;
+    width: max-content;
+    padding: var(--space-1) var(--space-2);
+    border: var(--hairline);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--fg);
+    font-size: var(--text-caption);
+    line-height: var(--leading-text);
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+  }
+  .chart-tool:has(:focus-visible) .tool-tip {
+    visibility: visible;
+    opacity: 1;
+  }
+  @media (hover: hover) {
+    .chart-tool:hover .tool-tip {
+      visibility: visible;
+      opacity: 1;
+    }
   }
   .axis {
     display: grid;
@@ -845,11 +927,24 @@ const careerStops = site.experience
     .lane:is(:hover, [data-open]) .card {
       transition: opacity var(--duration) var(--ease);
     }
+    .tool-tip {
+      transition:
+        opacity var(--duration) var(--ease),
+        visibility 0s var(--duration);
+    }
+    .chart-tool:has(:focus-visible) .tool-tip {
+      transition: opacity var(--duration) var(--ease);
+    }
+    @media (hover: hover) {
+      .chart-tool:hover .tool-tip {
+        transition: opacity var(--duration) var(--ease);
+      }
+    }
 
     /*
      * One pen draws the whole career at a steady pace: the lanes are wiped in from the first
-     * job to today, since x is time. Stops pop in as the pen passes them; then today's dot
-     * keeps breathing and a glint of light runs along the current job.
+     * job to today, since x is time. Stops pop in as the pen passes them; then today's sun
+     * or moon keeps glowing and a glint of light runs along the current job.
      * (A stroke-dash draw doesn't work here: non-scaling strokes break dash lengths.)
      */
     .chart {
@@ -874,24 +969,20 @@ const careerStops = site.experience
     .now {
       animation: pop 300ms var(--ease) var(--draw) both;
     }
-    .now::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: var(--line);
-      animation: breathe var(--breath) var(--ease) var(--draw) infinite both;
+    .now svg {
+      animation: glow var(--breath) ease-in-out var(--draw) infinite alternate both;
     }
     /* Hold everything at the start until the chart scrolls into view; without JS it just runs. */
-    :global(:root[data-js]) .chart:not([data-seen]) :is(.track, .glint, .stop, .stop-logo, .now),
-    :global(:root[data-js]) .chart:not([data-seen]) .now::after,
-    .chart[data-paused] :is(.track, .glint, .stop, .stop-logo, .now),
-    .chart[data-paused] .now::after {
+    :global(:root[data-js]) .chart:not([data-seen]) :is(.track, .glint, .stop, .stop-logo, .now, .now svg),
+    .chart[data-paused] :is(.track, .glint, .stop, .stop-logo, .now, .now svg) {
       animation-play-state: paused;
+    }
+    .chart[data-replay] :is(.track, .glint, .stop, .stop-logo, .now, .now svg) {
+      animation: none;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .chart-pause,
+    .chart-tools,
     .glint {
       display: none;
     }
@@ -946,14 +1037,12 @@ const careerStops = site.experience
       scale: 1;
     }
   }
-  @keyframes breathe {
+  @keyframes glow {
     from {
-      scale: 1;
-      opacity: 0.5;
+      filter: drop-shadow(0 0 2px var(--halo));
     }
     to {
-      scale: 2.6;
-      opacity: 0;
+      filter: drop-shadow(0 0 8px var(--halo)) drop-shadow(0 0 2px var(--halo));
     }
   }
 
