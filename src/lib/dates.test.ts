@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
 import {
   formatDuration,
+  formatMonthRange,
   formatPeriod,
-  formatPeriodMonths,
   formatYearRange,
   monthsBetween,
   yearsSince,
@@ -32,21 +32,14 @@ describe("formatDuration", () => {
 
 describe("formatYearRange / formatPeriod", () => {
   it("is explicit even within one year and uses 'now' for present", () => {
-    expect(formatYearRange({ year: 2021, month: 6 }, { year: 2021, month: 11 })).toBe("2021–2021");
-    expect(formatYearRange({ year: 2022, month: 8 }, null)).toBe("2022–now");
-    expect(formatPeriod({ year: 2022, month: 8 }, null, now)).toBe("2022–now · 4 years");
+    expect(formatYearRange({ year: 2021, month: 6 }, { year: 2021, month: 11 })).toBe(
+      "2021 – 2021",
+    );
+    expect(formatYearRange({ year: 2022, month: 8 }, null)).toBe("2022 – now");
+    expect(formatPeriod({ year: 2022, month: 8 }, null, now)).toBe("2022 – now · 4 years");
     expect(formatPeriod({ year: 2021, month: 12 }, { year: 2022, month: 8 }, now)).toBe(
-      "2021–2022 · 9 months",
+      "2021 – 2022 · 9 months",
     );
-  });
-  it("names the months when a closed period starts and ends in the same year", () => {
-    expect(formatPeriodMonths({ year: 2021, month: 6 }, { year: 2021, month: 11 }, now)).toBe(
-      "Jun–Nov 2021 · 6 months",
-    );
-    expect(formatPeriodMonths({ year: 2021, month: 12 }, { year: 2022, month: 8 }, now)).toBe(
-      "2021–2022 · 9 months",
-    );
-    expect(formatPeriodMonths({ year: 2022, month: 8 }, null, now)).toBe("2022–now · 4 years");
   });
   it("never emits an em dash", () => {
     expect(formatPeriod({ year: 2019, month: 6 }, { year: 2021, month: 6 }, now)).not.toContain(
@@ -63,5 +56,17 @@ describe("yearsSince", () => {
   it("counts whole elapsed years, flipping only on the anniversary month", () => {
     expect(yearsSince({ year: 2019, month: 6 }, { year: 2027, month: 5 })).toBe(7);
     expect(yearsSince({ year: 2019, month: 6 }, { year: 2027, month: 6 })).toBe(8);
+  });
+});
+
+describe("formatMonthRange", () => {
+  it("names the exact months a finished job ran", () => {
+    expect(formatMonthRange({ year: 2019, month: 6 }, { year: 2021, month: 6 }, now)).toBe(
+      "Jun 2019 – Jun 2021 · 2 years",
+    );
+  });
+
+  it("runs an ongoing job until now", () => {
+    expect(formatMonthRange({ year: 2022, month: 8 }, null, now)).toBe("Aug 2022 – now · 4 years");
   });
 });

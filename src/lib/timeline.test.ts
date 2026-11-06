@@ -1,40 +1,30 @@
 import { describe, expect, it } from "vite-plus/test";
-import { axisYears, barPosition } from "./timeline";
+import { barPosition, yearSpans } from "./timeline";
 
 describe("timeline", () => {
+  const first = { year: 2019, month: 6 };
   const now = { year: 2026, month: 11 };
+  const total = 90;
 
-  it("spans Jan of firstYear to Dec of the current year", () => {
-    expect(axisYears(2019, now)).toEqual([2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]);
-  });
-
-  it("positions bars by months", () => {
-    const p = barPosition({ year: 2022, month: 8 }, null, 2019, now);
-    expect(p.left).toBeCloseTo((43 / 96) * 100, 5);
-    expect(p.width).toBeCloseTo((52 / 96) * 100, 5);
-  });
-
-  it("keeps the present bar inside the axis after a January rebuild", () => {
-    const jan = { year: 2027, month: 1 };
-    expect(axisYears(2019, jan).at(-1)).toBe(2027);
-    const p = barPosition({ year: 2022, month: 8 }, null, 2019, jan);
-    expect(p.left + p.width).toBeLessThanOrEqual(100);
+  it("starts at the first job and ends with the current month", () => {
+    const bsc = barPosition(first, { year: 2021, month: 6 }, first, now);
+    expect(bsc.left).toBe(0);
+    const current = barPosition({ year: 2022, month: 8 }, null, first, now);
+    expect(current.left + current.width).toBeCloseTo(100, 5);
+    expect(current.width).toBeCloseTo((52 / total) * 100, 5);
   });
 
   it("ends a bar where the next job starts when they share a month", () => {
-    const bsc = barPosition({ year: 2019, month: 6 }, { year: 2021, month: 6 }, 2019, now, {
-      year: 2021,
-      month: 6,
-    });
-    const capitole = barPosition({ year: 2021, month: 6 }, { year: 2021, month: 11 }, 2019, now);
+    const bsc = barPosition(first, { year: 2021, month: 6 }, first, now, { year: 2021, month: 6 });
+    const capitole = barPosition({ year: 2021, month: 6 }, { year: 2021, month: 11 }, first, now);
     expect(bsc.left + bsc.width).toBeCloseTo(capitole.left, 5);
   });
 
-  it("keeps the inclusive end month when the next job starts later", () => {
-    const p = barPosition({ year: 2021, month: 6 }, { year: 2021, month: 11 }, 2019, now, {
-      year: 2021,
-      month: 12,
-    });
-    expect(p.width).toBeCloseTo((6 / 96) * 100, 5);
+  it("splits the axis into whole and partial years that fill it exactly", () => {
+    const spans = yearSpans(first, now);
+    expect(spans.map((s) => s.year)).toEqual([2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]);
+    expect(spans[0].width).toBeCloseTo((7 / total) * 100, 5);
+    expect(spans.at(-1)!.width).toBeCloseTo((11 / total) * 100, 5);
+    expect(spans.reduce((sum, s) => sum + s.width, 0)).toBeCloseTo(100, 5);
   });
 });

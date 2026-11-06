@@ -7,16 +7,15 @@ import Layout from "@layouts/layout.astro";
 import avatar from "../assets/avatar.jpg";
 import { gifSizes } from "../content/gif-sizes";
 import { site, type DayGif } from "../content/site";
-import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
+import { formatMonthRange, formatPeriod, toYearMonth, yearsSince } from "../lib/dates";
 import { gifAnimated, gifStill } from "../lib/gif";
-import { careerY, curvePath } from "../lib/curve";
 import { previewName } from "../lib/preview";
-import { axisYears, barPosition } from "../lib/timeline";
+import { barPosition, yearSpans } from "../lib/timeline";
 
 const now = toYearMonth(new Date());
 const copy = site.copy;
 const years = yearsSince(site.firstJobStart, now);
-const axis = axisYears(site.firstJobStart.year, now);
+const axis = yearSpans(site.firstJobStart, now);
 const logos = import.meta.glob<SvgComponent>("../assets/logos/*.svg", {
   eager: true,
   import: "default",
@@ -35,8 +34,6 @@ const previews = new Map(
   ),
 );
 const preview = (url: string) => previews.get(previewName(url));
-/* Career line geometry, in viewBox units: x is percent of the axis, y is pixels of the plot. */
-const PLOT = 128;
 /*
  * Memes are CSS backgrounds, not <img>s: browsers never fetch a background for an element
  * that isn't rendered, so only today's meme in the current theme is downloaded.
@@ -53,28 +50,8 @@ const gifVars = (day: DayGif) =>
     `--ratio-light:${gifSizes[day.light].join("/")}`,
     `--ratio-dark:${gifSizes[day.dark].join("/")}`,
   ].join(";");
-const first = site.experience.at(-1)!;
-const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left;
-const span = 100 - origin;
-const yAt = (x: number) => careerY(x, { from: origin, top: 14, bottom: PLOT - 10 });
-const GLINT_W = 8;
-const GLINT_H = 3;
-/* The glint follows the curve through four waypoints along the current job. */
-const glintVars = (left: number, width: number) =>
-  [0.25, 0.5, 0.75, 1]
-    .map((p, i) => {
-      const x = p * (width - GLINT_W);
-      const y = yAt(left + x + GLINT_W / 2) - yAt(left + GLINT_W / 2);
-      return `--gx${i}:${x.toFixed(3)}px;--gy${i}:${y.toFixed(3)}px`;
-    })
-    .join(";");
-const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
-const careerStops = site.experience
-  .map((e) => ({
-    offset: (barPosition(e.start, e.end, site.firstJobStart.year, now).left / 100).toFixed(4),
-    style: `--brand:${e.color};--brand-dark:${e.colorDark ?? e.color}`,
-  }))
-  .reverse();
+const place = (e: (typeof site.experience)[number], i: number) =>
+  barPosition(e.start, e.end, site.firstJobStart, now, site.experience[i - 1]?.start);
 ---
 
 <Layout
@@ -131,6 +108,48 @@ const careerStops = site.experience
 
         <section>
           <h2>{copy.sections.experience}</h2>
+          <div class="chart">
+            <div class="grid" aria-hidden="true">
+              {axis.slice(1).map((y) => (
+                <span style={`--left:${y.left}%`} />
+              ))}
+            </div>
+            <div class="plot" aria-hidden="true">
+              <ul class="lanes">
+                {
+                  site.experience.map((e, i) => {
+                    const { left, width } = place(e, i);
+                    const Logo = logo(e.logo);
+                    return (
+                      <li
+                        class="lane"
+                        style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color}`}
+                      >
+                        <span class="segment" />
+                        <span class="card">
+                          <span class="card-logo">
+                            <Logo width={20} height={20} aria-hidden="true" />
+                          </span>
+                          <span class="card-text">
+                            <span class="card-title">
+                              {e.role} at {e.company}
+                              {e.client && ` for ${e.client.name}`}
+                            </span>
+                            <span class="card-meta">{formatMonthRange(e.start, e.end, now)}</span>
+                          </span>
+                        </span>
+                      </li>
+                    );
+                  })
+                }
+              </ul>
+            </div>
+            <div class="axis" aria-hidden="true">
+              {axis.map((y) => (
+                <span style={`--left:${y.left + y.width / 2}%`}>{y.year}</span>
+              ))}
+            </div>
+          </div>
           <ul>
             {
               site.experience.map((e) => (
@@ -155,125 +174,11 @@ const careerStops = site.experience
                       </>
                     )}
                   </span>
-                  <span class="meta">{formatPeriodMonths(e.start, e.end, now)}</span>
+                  <span class="meta">{formatPeriod(e.start, e.end, now)}</span>
                 </li>
               ))
             }
           </ul>
-          <div
-            class="chart"
-            style={`--years:${axis.length};--plot:${PLOT}px;--origin:${origin.toFixed(3)}%`}
-            data-chart
-          >
-            <span class="chart-tool replay">
-              <button type="button" aria-label={copy.chart.replay} data-chart-replay>
-                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                  <path d="M3.5 8a4.5 4.5 0 1 0 1.32-3.18M4.5 2.5v2.5H7" />
-                </svg>
-              </button>
-              <span class="tool-tip" aria-hidden="true">{copy.chart.replayTip}</span>
-            </span>
-            <div class="grid" aria-hidden="true">
-              {axis.map(() => (
-                <span />
-              ))}
-            </div>
-            <ul class="lanes" aria-hidden="true">
-              {
-                site.experience.map((e, i) => {
-                  const later = site.experience[i - 1];
-                  const { left, width } = barPosition(
-                    e.start,
-                    e.end,
-                    site.firstJobStart.year,
-                    now,
-                    later?.start,
-                  );
-                  const d = curvePath(left, left + width, yAt);
-                  const Logo = logo(e.logo);
-                  return (
-                    <li
-                      class="lane"
-                      style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color};--stop-at:${at(left)};--y-start:${yAt(left).toFixed(2)}px;--y-end:${yAt(left + width).toFixed(2)}px`}
-                    >
-                      <span class="hit" />
-                      <svg class="track" viewBox={`0 0 100 ${PLOT}`} preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient
-                            id={`career-${i}`}
-                            gradientUnits="userSpaceOnUse"
-                            x1="0"
-                            y1="0"
-                            x2="100"
-                            y2="0"
-                          >
-                            {careerStops.map((stop) => (
-                              <stop offset={stop.offset} style={stop.style} />
-                            ))}
-                          </linearGradient>
-                        </defs>
-                        <path d={d} style={`stroke:url(#career-${i})`} />
-                        {!e.end && (
-                          <>
-                            <defs>
-                              <linearGradient id="glint">
-                                <stop offset="0" stop-color="#fff" stop-opacity="0" />
-                                <stop offset="0.5" stop-color="#fff" stop-opacity="0.85" />
-                                <stop offset="1" stop-color="#fff" stop-opacity="0" />
-                              </linearGradient>
-                            </defs>
-                            <rect
-                              class="glint"
-                              x={left}
-                              y={yAt(left + GLINT_W / 2) - GLINT_H / 2}
-                              width={GLINT_W}
-                              height={GLINT_H}
-                              fill="url(#glint)"
-                              style={glintVars(left, width)}
-                            />
-                          </>
-                        )}
-                      </svg>
-                      <span class="stop">
-                        <span class="stop-logo">
-                          <Logo width={18} height={18} aria-hidden="true" />
-                        </span>
-                      </span>
-                      {
-                        !e.end && (
-                          <span class="now">
-                            <span class="light-only">
-                              <Sun aria-hidden="true" />
-                            </span>
-                            <span class="dark-only">
-                              <Moon aria-hidden="true" />
-                            </span>
-                          </span>
-                        )
-                      }
-                      <span class="card">
-                        <span class="card-logo">
-                          <Logo width={20} height={20} aria-hidden="true" />
-                        </span>
-                        <span class="card-text">
-                          <span class="card-title">
-                            {e.role} at {e.company}
-                            {e.client && ` for ${e.client.name}`}
-                          </span>
-                          <span class="card-meta">{formatPeriodMonths(e.start, e.end, now)}</span>
-                        </span>
-                      </span>
-                    </li>
-                  );
-                })
-              }
-            </ul>
-            <div class="axis" aria-hidden="true">
-              {axis.map((y) => (
-                <span>{y}</span>
-              ))}
-            </div>
-          </div>
         </section>
 
         <section>
@@ -490,77 +395,6 @@ const careerStops = site.experience
       link.addEventListener("pointerleave", hide);
     }
     addEventListener("scroll", hide, { passive: true });
-  }
-
-  const chart = document.querySelector<HTMLElement>("[data-chart]");
-  if (chart) {
-    new IntersectionObserver(
-      (entries, observer) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        chart.toggleAttribute("data-seen", true);
-        observer.disconnect();
-      },
-      { threshold: 0.4 },
-    ).observe(chart);
-  }
-  /* Today's marker pops in last, so its pop ending means the drawing is done. */
-  chart?.addEventListener("animationend", (event) => {
-    const target = event.target as Element;
-    if (event.animationName === "pop" && target.classList.contains("now")) {
-      chart.toggleAttribute("data-done", true);
-    }
-  });
-  /* Replay drops every animation for one frame of style, then lets them all start over. */
-  chart?.querySelector("[data-chart-replay]")?.addEventListener("click", () => {
-    chart.removeAttribute("data-done");
-    chart.toggleAttribute("data-replay", true);
-    chart.getBoundingClientRect();
-    chart.removeAttribute("data-replay");
-  });
-
-  const plot = document.querySelector<HTMLElement>(".lanes");
-  if (chart && plot && matchMedia("(hover: hover)").matches) {
-    const still = matchMedia("(prefers-reduced-motion: reduce)");
-    const EDGE = 8;
-    let target = { x: 0, y: 0 };
-    let at = { x: 0, y: 0 };
-    let frame = 0;
-    let active: HTMLElement | null = null;
-    const place = () => {
-      const half = (active?.offsetWidth ?? 0) / 2;
-      const box = plot.getBoundingClientRect();
-      const frameBox = chart.getBoundingClientRect();
-      const min = frameBox.left - box.left + half + EDGE;
-      const max = frameBox.right - box.left - half - EDGE;
-      plot.style.setProperty("--x", `${Math.min(Math.max(at.x, min), max)}px`);
-      plot.style.setProperty("--y", `${at.y}px`);
-    };
-    const ease = () => {
-      at.x += (target.x - at.x) * 0.2;
-      at.y += (target.y - at.y) * 0.2;
-      place();
-      const settled = Math.abs(target.x - at.x) < 0.5 && Math.abs(target.y - at.y) < 0.5;
-      frame = settled ? 0 : requestAnimationFrame(ease);
-    };
-    plot.toggleAttribute("data-follow", true);
-    plot.addEventListener("pointermove", (event) => {
-      const box = plot.getBoundingClientRect();
-      target = { x: event.clientX - box.left, y: event.clientY - box.top };
-      const lane = (event.target as Element).closest(".lane");
-      const card = lane?.querySelector<HTMLElement>(".card") ?? null;
-      if (card !== active) {
-        const fresh = !active;
-        active = card;
-        if (fresh) at = { ...target };
-      }
-      if (still.matches) {
-        at = { ...target };
-        place();
-      } else if (!frame) frame = requestAnimationFrame(ease);
-    });
-    plot.addEventListener("pointerleave", () => {
-      active = null;
-    });
   }
 
   if (!matchMedia("(hover: hover)").matches) {
@@ -1212,149 +1046,84 @@ const careerStops = site.experience
 
   /* The table above carries the same facts, so the chart is aria-hidden. */
   .chart {
-    --stroke: 3px;
-    --stop: 12px;
-    --logo: 28px;
-    --logo-mark: 20px;
-    --axis: 28px;
-    --dimmed: 0.3;
-    --inset-x: var(--space-3);
-    /* Today's marker sits on the right edge of the plot, so that side keeps room for it. */
-    --inset-end: calc(var(--inset-x) + var(--space-4));
-    --inset-y: var(--space-5);
+    --bar: 28px;
+    --plot: var(--bar);
+    --logo: 40px;
+    --logo-mark: 28px;
+    --axis: 20px;
+    --card: 300px;
+    --dimmed: 0.35;
+    --inset: var(--space-3);
+    --inset-x: var(--inset);
 
     position: relative;
     margin-top: var(--flow);
-    padding: var(--inset-y) var(--inset-end) var(--space-3) var(--inset-x);
+    /* Year labels sit low in their row, so the bottom gives back that slack to match the top. */
+    padding: var(--inset) var(--inset-x) calc(var(--inset) - var(--space-1));
     border: var(--hairline);
     border-radius: var(--radius-xl);
     corner-shape: squircle;
   }
   .grid {
     position: absolute;
-    inset: 0 var(--inset-end) 0 var(--inset-x);
-    display: grid;
-    grid-template-columns: repeat(var(--years), 1fr);
+    inset: 0 var(--inset-x);
   }
-  .grid span + span {
+  /* A dashed line where each new year begins. */
+  .grid span {
+    position: absolute;
+    inset: 0 auto 0 var(--left);
     border-left: 1px dashed var(--rule);
   }
-  /* One stacking context for the plot, so every node sits above every slice of the line,
-     and its cards above the replay button. Only the lanes' hit areas take the pointer. */
-  .lanes {
+  /* One stacking context, so cards rise above later lanes; only segments take the pointer. */
+  .plot {
     position: relative;
     z-index: 4;
     isolation: isolate;
-    pointer-events: none;
     height: var(--plot);
-    margin-top: 0;
+    pointer-events: none;
   }
-  /* Every lane spans the whole plot so its slice of the curve shares one coordinate space;
-     only its column of time takes the pointer. */
+  .lanes {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+  }
   .lane {
     --line: light-dark(var(--brand), var(--brand-dark));
 
     position: absolute;
     inset: 0;
-    pointer-events: none;
   }
-  .hit {
+  /* Each job is one stretch of the strip; a hairline gap keeps neighbours apart. */
+  .segment {
     position: absolute;
-    inset: 0 auto 0 var(--left);
-    width: var(--width);
-    pointer-events: auto;
-  }
-  /* Stretched to the lane so x maps to time; the stroke keeps its width regardless. */
-  .track {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-  .track path {
-    fill: none;
-    stroke: var(--line);
-    stroke-width: var(--stroke);
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    vector-effect: non-scaling-stroke;
-  }
-  .stop,
-  .now {
-    position: absolute;
-    top: var(--y-start);
-    width: var(--stop);
-    height: var(--stop);
-    border-radius: 50%;
-    translate: -50% -50%;
-  }
-  .stop {
+    bottom: 0;
     left: var(--left);
-    z-index: 2;
-    border: var(--stroke) solid var(--line);
-    background: var(--bg);
-  }
-  .track stop {
-    stop-color: light-dark(var(--brand), var(--brand-dark));
-  }
-  .stop-logo {
-    position: absolute;
-    bottom: calc(100% + var(--space-1));
-    left: 50%;
-    display: grid;
-    place-items: center;
-    width: var(--space-6);
-    height: var(--space-6);
+    width: calc(var(--width) - 2px);
+    height: var(--bar);
+    overflow: hidden;
     border-radius: var(--radius-md);
     corner-shape: squircle;
-    background: var(--logo-bg);
-    box-shadow:
-      0 0 0 1px var(--rule),
-      0 4px 12px -4px light-dark(rgb(35 31 23 / 0.25), rgb(0 0 0 / 0.6));
-    translate: -50% 0;
-    opacity: 0;
-    pointer-events: none;
+    background: var(--line);
+    pointer-events: auto;
   }
-  .stop-logo svg {
-    width: 18px;
-    height: 18px;
+  /* The current job is listed first and ends the strip, so it needs no gap after it. */
+  .lane:first-child .segment {
+    width: var(--width);
   }
-  .now {
-    --halo: rgb(255 180 60 / 0.6);
-
-    top: var(--y-end);
-    z-index: 2;
-    left: calc(var(--left) + var(--width));
-    width: var(--space-6);
-    height: var(--space-6);
-  }
-  :global([data-theme="dark"]) .now {
-    --halo: rgb(255 255 255 / 0.45);
-  }
-  .now svg {
-    display: block;
-    width: var(--space-6);
-    height: var(--space-6);
-    filter: drop-shadow(0 0 3px var(--halo));
-  }
-  .lanes:has(.lane:is(:hover, [data-open])) .lane:not(:hover, [data-open]) :is(.track, .now) {
+  .lanes:has(.segment:hover) .lane:not(:has(.segment:hover)) .segment,
+  .lanes:has(.lane[data-open]) .lane:not([data-open]) .segment {
     opacity: var(--dimmed);
-  }
-  /* Dimmed nodes fade their ring colour, not their fill, so they stay solid circles. */
-  .lanes:has(.lane:is(:hover, [data-open])) .lane:not(:hover, [data-open]) .stop {
-    border-color: color-mix(in oklab, var(--line) 30%, var(--bg));
   }
   .card {
     position: absolute;
-    top: calc(var(--y-start) + var(--space-3));
-    left: clamp(0px, calc(var(--left) - var(--space-4)), calc(100% - var(--popover)));
+    bottom: calc(var(--bar) + var(--space-2));
+    left: clamp(0px, calc(var(--left) - var(--space-4)), calc(100% - var(--card)));
     z-index: 4;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-3);
     width: max-content;
-    max-width: var(--popover);
+    max-width: var(--card);
     padding: var(--space-2) var(--space-3);
     border: var(--hairline);
     border-radius: var(--radius-md);
@@ -1386,16 +1155,10 @@ const careerStops = site.experience
   }
   /* Touch screens keep :hover after a tap, so taps toggle data-open instead. */
   @media (hover: hover) {
-    .lane:hover .card {
+    .lane:has(.segment:hover) .card {
       visibility: visible;
       opacity: 1;
     }
-  }
-  /* With a mouse, the card rides above the pointer; --x and --y are eased in script. */
-  .lanes[data-follow] .card {
-    top: var(--y);
-    left: var(--x);
-    translate: -50% calc(-100% - var(--space-3));
   }
   .lane[data-open] .card {
     visibility: visible;
@@ -1403,234 +1166,37 @@ const careerStops = site.experience
   }
   .card-meta {
     color: var(--muted);
-  }
-  /* Top-left sits above the curve's start, the one corner the line never reaches. */
-  .chart-tool {
-    position: absolute;
-    top: var(--space-2);
-    left: var(--space-2);
-    z-index: 3;
-  }
-  .replay {
-    visibility: hidden;
-    opacity: 0;
-  }
-  .chart[data-done] .replay {
-    visibility: visible;
-    opacity: 1;
-  }
-  .chart-tool button {
-    display: grid;
-    place-items: center;
-    width: var(--space-8);
-    height: var(--space-8);
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-  }
-  .chart-tool button:hover,
-  .chart-tool button:focus-visible {
-    background: var(--rule);
-    color: var(--fg);
-  }
-  .chart-tool button:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
-  }
-  .chart-tool path {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  .tool-tip {
-    position: absolute;
-    top: 50%;
-    left: calc(100% + var(--space-2));
-    translate: 0 -50%;
-    width: max-content;
-    padding: var(--space-1) var(--space-2);
-    border: var(--hairline);
-    border-radius: var(--radius-md);
-    background: var(--bg);
-    color: var(--fg);
-    font-size: var(--text-caption);
-    line-height: var(--leading-text);
-    pointer-events: none;
-    visibility: hidden;
-    opacity: 0;
-  }
-  .chart-tool:has(:focus-visible) .tool-tip {
-    visibility: visible;
-    opacity: 1;
-  }
-  @media (hover: hover) {
-    .chart-tool:hover .tool-tip {
-      visibility: visible;
-      opacity: 1;
-    }
+    white-space: nowrap;
   }
   .axis {
-    display: grid;
-    grid-template-columns: repeat(var(--years), 1fr);
+    position: relative;
+    margin-top: var(--space-2);
     height: var(--axis);
-    align-items: center;
     color: var(--muted);
     font-size: var(--text-micro);
     line-height: var(--leading-text);
     font-variant-numeric: tabular-nums;
-    text-align: center;
+  }
+  /* Each label sits in the middle of its year's share, partial years included. */
+  .axis span {
+    position: absolute;
+    top: 50%;
+    left: var(--left);
+    translate: -50% -50%;
   }
   @media (prefers-reduced-motion: no-preference) {
-    .track,
-    .now {
+    .segment {
       transition: opacity var(--duration) var(--ease);
-    }
-    .stop {
-      transition: border-color var(--duration) var(--ease);
     }
     .card {
       transition:
         opacity var(--duration) var(--ease),
         visibility 0s var(--duration);
     }
-    .lane:is(:hover, [data-open]) .card {
+    .lane:is(:has(.segment:hover), [data-open]) .card {
       transition: opacity var(--duration) var(--ease);
     }
-    .replay {
-      transition:
-        opacity 300ms var(--ease),
-        visibility 0s 300ms;
-    }
-    .chart[data-done] .replay {
-      transition: opacity 300ms var(--ease);
-    }
-    .tool-tip {
-      transition:
-        opacity var(--duration) var(--ease),
-        visibility 0s var(--duration);
-    }
-    .chart-tool:has(:focus-visible) .tool-tip {
-      transition: opacity var(--duration) var(--ease);
-    }
-    @media (hover: hover) {
-      .chart-tool:hover .tool-tip {
-        transition: opacity var(--duration) var(--ease);
-      }
-    }
-
-    /* A clip wipe, not a stroke-dash draw: non-scaling strokes break dash lengths. */
-    .chart {
-      --draw: 1800ms;
-      --flash: 900ms;
-      --breath: 2400ms;
-    }
-    .track {
-      animation: wipe var(--draw) linear backwards;
-    }
-    .stop-logo {
-      transform-origin: 50% 100%;
-      animation: flash var(--flash) var(--ease) calc(var(--stop-at) * var(--draw)) both;
-    }
-    .glint {
-      animation: glint var(--breath) var(--daybreak-ease) var(--draw) infinite both;
-    }
-    .stop {
-      animation: pop 300ms var(--ease) calc(var(--stop-at) * var(--draw)) both;
-    }
-    .now {
-      animation: pop 300ms var(--ease) var(--draw) both;
-    }
-    .now svg {
-      animation: glow var(--breath) ease-in-out var(--draw) infinite alternate both;
-    }
-    /* Hold everything at the start until the chart scrolls into view; without JS it just runs. */
-    :global(:root[data-js]) .chart:not([data-seen]) :is(.track, .glint, .stop, .stop-logo, .now, .now svg) {
-      animation-play-state: paused;
-    }
-    .chart[data-replay] :is(.track, .glint, .stop, .stop-logo, .now, .now svg) {
-      animation: none;
-    }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .chart-tool,
-    .glint {
-      display: none;
-    }
-  }
-  /* Negative insets keep the round caps from being cut while the line draws. */
-  @keyframes wipe {
-    from {
-      clip-path: inset(-8px calc(100% - var(--origin)) -8px -8px);
-    }
-    to {
-      clip-path: inset(-8px);
-    }
-  }
-  @keyframes flash {
-    0% {
-      opacity: 0;
-      scale: 0.4;
-      translate: -50% 6px;
-    }
-    20%,
-    65% {
-      opacity: 1;
-      scale: 1;
-      translate: -50% 0;
-    }
-    100% {
-      opacity: 0;
-      scale: 0.8;
-      translate: -50% 2px;
-    }
-  }
-  /* SVG transforms are in user units, which are percent of the axis here. */
-  @keyframes glint {
-    from {
-      transform: translate(0, 0);
-      opacity: 0;
-    }
-    20% {
-      opacity: 1;
-    }
-    25% {
-      transform: translate(var(--gx0), var(--gy0));
-    }
-    50% {
-      transform: translate(var(--gx1), var(--gy1));
-    }
-    75% {
-      transform: translate(var(--gx2), var(--gy2));
-    }
-    80% {
-      opacity: 1;
-    }
-    to {
-      transform: translate(var(--gx3), var(--gy3));
-      opacity: 0;
-    }
-  }
-  @keyframes pop {
-    from {
-      scale: 0;
-    }
-    to {
-      scale: 1;
-    }
-  }
-  @keyframes glow {
-    from {
-      filter: drop-shadow(0 0 2px var(--halo));
-    }
-    to {
-      filter: drop-shadow(0 0 8px var(--halo)) drop-shadow(0 0 2px var(--halo));
-    }
-  }
-
   .scheme {
     position: relative;
     margin-left: auto;
@@ -2024,8 +1590,7 @@ const careerStops = site.experience
       padding: var(--space-16) var(--space-8) var(--space-14);
     }
     .chart {
-      --inset-x: var(--space-5);
-      --inset-y: var(--space-8);
+      --inset: var(--space-5);
     }
   }
 </style>

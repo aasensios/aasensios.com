@@ -16,11 +16,19 @@ export function formatDuration(months: number): string {
 }
 
 export function formatYearRange(start: YearMonth, end: YearMonth | null): string {
-  return `${start.year}${EN_DASH}${end ? end.year : "now"}`;
+  return `${start.year} ${EN_DASH} ${end ? end.year : "now"}`;
 }
 
 export function formatPeriod(start: YearMonth, end: YearMonth | null, now: YearMonth): string {
   return `${formatYearRange(start, end)} ${MIDDLE_DOT} ${formatDuration(monthsBetween(start, end ?? now))}`;
+}
+
+export function yearsSince(start: YearMonth, now: YearMonth): number {
+  return Math.floor((monthsBetween(start, now) - 1) / 12);
+}
+
+export function toYearMonth(date: Date): YearMonth {
+  return { year: date.getFullYear(), month: date.getMonth() + 1 };
 }
 
 const MONTH_ABBR = [
@@ -38,20 +46,9 @@ const MONTH_ABBR = [
   "Dec",
 ];
 
-export function formatPeriodMonths(
-  start: YearMonth,
-  end: YearMonth | null,
-  now: YearMonth,
-): string {
-  if (!end || end.year !== start.year) return formatPeriod(start, end, now);
-  const range = `${MONTH_ABBR[start.month - 1]}${EN_DASH}${MONTH_ABBR[end.month - 1]} ${start.year}`;
-  return `${range} ${MIDDLE_DOT} ${formatDuration(monthsBetween(start, end))}`;
-}
-
-export function yearsSince(start: YearMonth, now: YearMonth): number {
-  return Math.floor((monthsBetween(start, now) - 1) / 12);
-}
-
-export function toYearMonth(date: Date): YearMonth {
-  return { year: date.getFullYear(), month: date.getMonth() + 1 };
+/** "Aug 2022 – now · 4 years": the exact months a job ran, plus how long that was. */
+export function formatMonthRange(start: YearMonth, end: YearMonth | null, now: YearMonth): string {
+  const month = (ym: YearMonth) => `${MONTH_ABBR[ym.month - 1]} ${ym.year}`;
+  const range = `${month(start)} ${EN_DASH} ${end ? month(end) : "now"}`;
+  return `${range} ${MIDDLE_DOT} ${formatDuration(monthsBetween(start, end ?? now))}`;
 }

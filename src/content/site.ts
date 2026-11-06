@@ -162,10 +162,6 @@ export const site = {
         request: "Replace these GIFs:",
       },
     },
-    chart: {
-      replay: "Replay chart animation",
-      replayTip: "Replay",
-    },
     footer: [
       { label: "Made with", link: { label: "Astro", href: "https://astro.build/" } },
       {
