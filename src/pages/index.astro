@@ -555,11 +555,11 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
     }
     .sun {
       transition:
-        translate var(--daybreak) var(--daybreak-ease),
-        opacity var(--daybreak) var(--daybreak-ease);
+        translate var(--swap) var(--daybreak-ease),
+        opacity var(--swap) var(--daybreak-ease);
     }
     .moon {
-      transition: opacity var(--daybreak) var(--daybreak-ease);
+      transition: opacity var(--swap) var(--daybreak-ease);
     }
   }
   .dark-only,
@@ -592,10 +592,13 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
       opacity var(--duration) var(--ease),
       visibility 0s var(--duration);
   }
-  .scheme:hover .tip {
-    visibility: visible;
-    opacity: 1;
-    transition: opacity var(--duration) var(--ease);
+  /* Touch screens keep :hover after a tap, so the tip only follows a real pointer. */
+  @media (hover: hover) {
+    .scheme:hover .tip {
+      visibility: visible;
+      opacity: 1;
+      transition: opacity var(--duration) var(--ease);
+    }
   }
 
   footer {

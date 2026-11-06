@@ -60,18 +60,10 @@ body {
 
 :root {
   color-scheme: light dark;
-  /* Shared by the page transition and the sun/moon swap so they stay in step. */
-  --daybreak: 1400ms;
+  /* The page sky shifts slowly; the sun/moon swap is quicker so the button feels responsive. */
+  --daybreak: 1600ms;
   --daybreak-ease: cubic-bezier(0.37, 0, 0.63, 1);
-  /* How wide the daylight dome is for its height; wider on tall screens to keep it flat. */
-  --arc: 2;
-  --arc-base: 60%;
-}
-@media (orientation: portrait) {
-  :root {
-    --arc: 4.5;
-    --arc-base: 140%;
-  }
+  --swap: 450ms;
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -80,21 +72,13 @@ body {
   color-scheme: dark;
 }
 
-@property --dome {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 0%;
-}
-::view-transition {
-  background: linear-gradient(
-    to top,
-    #f4c487 0%,
-    #ec9f80 22%,
-    #d98a9c 45%,
-    #8f79b8 72%,
-    #262a52 100%
-  );
-}
+/*
+ * Dawn and dusk: daylight is a soft vertical gradient two screens tall that climbs from
+ * the horizon (or sinks into it). There is no edge, only light gathering from below,
+ * warm where it is newest and neutral once it has fully risen.
+ * The mask is four screens tall: a transparent screen on top, a two-screen fade,
+ * and an opaque screen at the bottom. Sliding it reveals one screen at a time.
+ */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -103,82 +87,54 @@ body {
   animation-timing-function: var(--daybreak-ease);
   animation-fill-mode: both;
 }
-/* The daylight snapshot: a dome rising from (or sinking into) the horizon. */
 :root[data-theme="light"]::view-transition-new(root),
 :root[data-theme="dark"]::view-transition-old(root) {
   z-index: 1;
-  mask-image: radial-gradient(
-    ellipse calc(var(--dome) * var(--arc) + var(--arc-base)) var(--dome) at 50% 100%,
-    #000 40%,
-    transparent 85%
-  );
-}
-/* The night snapshot: clear inside a wider dome, so the colours show between. */
-:root[data-theme="light"]::view-transition-old(root),
-:root[data-theme="dark"]::view-transition-new(root) {
-  mask-image: radial-gradient(
-    ellipse calc((var(--dome) * var(--arc) + var(--arc-base)) * 1.6) calc(var(--dome) * 1.7) at 50%
-      100%,
-    transparent 30%,
-    #000 80%
-  );
+  mask-image: linear-gradient(to top, #000 25%, transparent 75%);
+  mask-size: 100% 400%;
+  mask-repeat: no-repeat;
 }
 :root[data-theme="light"]::view-transition-new(root) {
-  animation-name: sunrise;
-}
-:root[data-theme="light"]::view-transition-old(root) {
-  animation-name: night-recedes;
+  animation-name: dawn;
 }
 :root[data-theme="dark"]::view-transition-old(root) {
-  animation-name: sunset;
+  animation-name: dusk;
+}
+:root[data-theme="light"]::view-transition-old(root) {
+  animation-name: night-lifts;
 }
 :root[data-theme="dark"]::view-transition-new(root) {
-  animation-name: night-returns;
+  animation-name: night-falls;
 }
-@keyframes sunrise {
-  0% {
-    --dome: 0%;
-    opacity: 0;
-    filter: sepia(0.4) saturate(1.4) hue-rotate(-10deg);
-  }
-  30% {
-    opacity: 1;
-  }
-  100% {
-    --dome: 300%;
-    opacity: 1;
-    filter: sepia(0) saturate(1) hue-rotate(0deg);
-  }
-}
-@keyframes sunset {
-  0% {
-    --dome: 300%;
-    opacity: 1;
-    filter: sepia(0) saturate(1) hue-rotate(0deg);
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    --dome: 0%;
-    opacity: 0;
-    filter: sepia(0.4) saturate(1.4) hue-rotate(-10deg);
-  }
-}
-@keyframes night-recedes {
+@keyframes dawn {
   from {
-    --dome: 0%;
+    mask-position: 0 0;
+    filter: sepia(0.5) saturate(1.5) hue-rotate(-15deg) brightness(0.9);
   }
   to {
-    --dome: 300%;
+    mask-position: 0 100%;
+    filter: none;
   }
 }
-@keyframes night-returns {
+@keyframes dusk {
   from {
-    --dome: 300%;
+    mask-position: 0 100%;
+    filter: none;
   }
   to {
-    --dome: 0%;
+    mask-position: 0 0;
+    filter: sepia(0.5) saturate(1.5) hue-rotate(-15deg) brightness(0.9);
+  }
+}
+/* The night snapshot pales a little as light arrives, and deepens back as it leaves. */
+@keyframes night-lifts {
+  to {
+    filter: brightness(1.25) saturate(0.85);
+  }
+}
+@keyframes night-falls {
+  from {
+    filter: brightness(1.25) saturate(0.85);
   }
 }
 ::view-transition-old(theme-icon) {
