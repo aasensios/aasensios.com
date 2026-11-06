@@ -123,7 +123,7 @@ export const site = {
     sections: {
       experience: "Relevant experience",
       projects: "Some projects",
-      links: "Contact",
+      links: "Contact me",
     },
   },
 };
