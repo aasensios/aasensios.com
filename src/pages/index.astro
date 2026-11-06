@@ -8,7 +8,8 @@ import avatar from "../assets/avatar.jpg";
 import { site, type DayGif } from "../content/site";
 import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
 import { gifAnimated, gifStill } from "../lib/gif";
-import { axisYears, barPosition, logEase, runClimb, trackPath } from "../lib/timeline";
+import { careerY, curvePath } from "../lib/curve";
+import { axisYears, barPosition } from "../lib/timeline";
 
 const now = toYearMonth(new Date());
 const copy = site.copy;
@@ -19,9 +20,8 @@ const logos = import.meta.glob<SvgComponent>("../assets/logos/*.svg", {
   import: "default",
 });
 const logo = (file: string) => logos[`../assets/logos/${file}`];
-/* Career line geometry, in viewBox units: x is percent of the axis, y is pixels of a lane. */
-const LANE = 36;
-const CURVE = 2.5;
+/* Career line geometry, in viewBox units: x is percent of the axis, y is pixels of the plot. */
+const PLOT = 144;
 /*
  * Memes are CSS backgrounds, not <img>s: browsers never fetch a background for an element
  * that isn't rendered, so only today's meme in the current theme is downloaded.
@@ -37,17 +37,18 @@ const gifVars = (day: DayGif) =>
     `--play-dark:url(${gifAnimated(day.dark)})`,
   ].join(";");
 const first = site.experience.at(-1)!;
-const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left - CURVE * 2;
+const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left;
 const span = 100 - origin;
-const GROWTH = 3;
+const yAt = (x: number) => careerY(x, { from: origin, top: 18, bottom: PLOT - 14 });
 const GLINT_W = 8;
 const GLINT_H = 3;
-/* The glint follows the log curve through four waypoints along the current job's run. */
-const glintVars = (width: number, climb: number) =>
+/* The glint follows the curve through four waypoints along the current job. */
+const glintVars = (left: number, width: number) =>
   [0.25, 0.5, 0.75, 1]
     .map((p, i) => {
       const x = p * (width - GLINT_W);
-      return `--gx${i}:${x.toFixed(3)}px;--gy${i}:${(-climb * logEase(x / width)).toFixed(3)}px`;
+      const y = yAt(left + x + GLINT_W / 2) - yAt(left + GLINT_W / 2);
+      return `--gx${i}:${x.toFixed(3)}px;--gy${i}:${y.toFixed(3)}px`;
     })
     .join(";");
 const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
@@ -139,7 +140,7 @@ const careerStops = site.experience
           </ul>
           <div
             class="chart"
-            style={`--years:${axis.length};--lane:${LANE}px;--origin:${origin.toFixed(3)}%`}
+            style={`--years:${axis.length};--plot:${PLOT}px;--origin:${origin.toFixed(3)}%`}
             data-chart
           >
             <span class="chart-tool replay">
@@ -159,7 +160,6 @@ const careerStops = site.experience
               {
                 site.experience.map((e, i) => {
                   const later = site.experience[i - 1];
-                  const earlier = site.experience[i + 1];
                   const { left, width } = barPosition(
                     e.start,
                     e.end,
@@ -167,31 +167,15 @@ const careerStops = site.experience
                     now,
                     later?.start,
                   );
-                  const track = {
-                    mid: LANE / 2,
-                    curve: CURVE,
-                    growth: GROWTH,
-                    continues: Boolean(later),
-                  };
-                  const before =
-                    earlier &&
-                    barPosition(earlier.start, earlier.end, site.firstJobStart.year, now, e.start);
-                  const lift = before
-                    ? runClimb(before.left, before.width, { ...track, continues: true })
-                    : 0;
-                  const climb = runClimb(left, width, track);
-                  const d = trackPath(left, width, {
-                    ...track,
-                    rise: earlier ? LANE : undefined,
-                    lift,
-                  });
+                  const d = curvePath(left, left + width, yAt);
                   const Logo = logo(e.logo);
                   return (
                     <li
                       class="lane"
-                      style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color};--stop-at:${at(left)};--climb:${climb.toFixed(3)}px`}
+                      style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color};--stop-at:${at(left)};--y-start:${yAt(left).toFixed(2)}px;--y-end:${yAt(left + width).toFixed(2)}px`}
                     >
-                      <svg class="track" viewBox={`0 0 100 ${LANE}`} preserveAspectRatio="none">
+                      <span class="hit" />
+                      <svg class="track" viewBox={`0 0 100 ${PLOT}`} preserveAspectRatio="none">
                         <defs>
                           <linearGradient
                             id={`career-${i}`}
@@ -219,11 +203,11 @@ const careerStops = site.experience
                             <rect
                               class="glint"
                               x={left}
-                              y={LANE / 2 - GLINT_H / 2}
+                              y={yAt(left + GLINT_W / 2) - GLINT_H / 2}
                               width={GLINT_W}
                               height={GLINT_H}
                               fill="url(#glint)"
-                              style={glintVars(width, climb)}
+                              style={glintVars(left, width)}
                             />
                           </>
                         )}
@@ -1065,11 +1049,23 @@ const careerStops = site.experience
     position: relative;
     margin-top: 0;
   }
+  .lanes {
+    height: var(--plot);
+  }
+  /* Every lane spans the whole plot so its slice of the curve shares one coordinate space;
+     only its column of time takes the pointer. */
   .lane {
     --line: light-dark(var(--brand), var(--brand-dark));
 
-    position: relative;
-    height: var(--lane);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .hit {
+    position: absolute;
+    inset: 0 auto 0 var(--left);
+    width: var(--width);
+    pointer-events: auto;
   }
   /* Stretched to the lane so x maps to time; the stroke keeps its width regardless. */
   .track {
@@ -1090,7 +1086,7 @@ const careerStops = site.experience
   .stop,
   .now {
     position: absolute;
-    top: 50%;
+    top: var(--y-start);
     width: var(--stop);
     height: var(--stop);
     border-radius: 50%;
@@ -1129,7 +1125,7 @@ const careerStops = site.experience
   .now {
     --halo: rgb(255 180 60 / 0.6);
 
-    top: calc(50% - var(--climb));
+    top: var(--y-end);
     left: calc(var(--left) + var(--width));
     width: var(--space-6);
     height: var(--space-6);
@@ -1151,7 +1147,7 @@ const careerStops = site.experience
   }
   .card {
     position: absolute;
-    top: calc(var(--lane) - var(--space-1));
+    top: calc(var(--y-start) + var(--space-3));
     left: clamp(0px, calc(var(--left) - var(--space-4)), calc(100% - var(--popover)));
     z-index: 1;
     display: flex;
@@ -1202,9 +1198,10 @@ const careerStops = site.experience
   .card-meta {
     color: var(--muted);
   }
+  /* Centred across the chart, low enough to sit under the curve rather than on it. */
   .chart-tool {
     position: absolute;
-    top: calc((100% - var(--axis)) / 2);
+    top: calc(var(--plot) * 0.72);
     left: 50%;
     z-index: 3;
     translate: -50% -50%;
@@ -1357,13 +1354,13 @@ const careerStops = site.experience
       display: none;
     }
   }
-  /* Insets reach past each lane so the climb from the lane below and the round caps aren't cut. */
+  /* Negative insets keep the round caps from being cut while the line draws. */
   @keyframes wipe {
     from {
-      clip-path: inset(-8px calc(100% - var(--origin)) calc(-100% - 8px) -8px);
+      clip-path: inset(-8px calc(100% - var(--origin)) -8px -8px);
     }
     to {
-      clip-path: inset(-8px -8px calc(-100% - 8px) -8px);
+      clip-path: inset(-8px);
     }
   }
   @keyframes flash {

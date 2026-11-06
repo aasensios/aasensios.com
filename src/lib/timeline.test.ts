@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { axisYears, barPosition, logEase, runClimb, trackPath } from "./timeline";
+import { axisYears, barPosition } from "./timeline";
 
 describe("timeline", () => {
   const now = { year: 2026, month: 11 };
@@ -36,35 +36,5 @@ describe("timeline", () => {
       month: 12,
     });
     expect(p.width).toBeCloseTo((6 / 96) * 100, 5);
-  });
-
-  it("draws a job without growth as a flat run", () => {
-    expect(trackPath(5, 20, { mid: 18, curve: 1, continues: true })).toMatch(
-      /^M 5 18 (L [\d.]+ 18 ?)+$/,
-    );
-  });
-
-  it("climbs in from the lane below and reaches the lane exactly at the job start", () => {
-    const d = trackPath(25, 50, { mid: 18, rise: 36, curve: 1, continues: false });
-    expect(d.startsWith("M 23 54 C 24 54 24 18 25 18 ")).toBe(true);
-    expect(d.endsWith("L 75 18")).toBe(true);
-  });
-
-  it("grows logarithmically: steep early, level late, longer jobs climb more", () => {
-    expect(logEase(0)).toBe(0);
-    expect(logEase(1)).toBeCloseTo(1, 10);
-    expect(logEase(0.25)).toBeGreaterThan(0.25);
-    const opts = { mid: 18, curve: 1, growth: 3, continues: false };
-    expect(runClimb(5, 40, opts)).toBeGreaterThan(runClimb(5, 10, opts));
-    expect(runClimb(5, 40, opts) / runClimb(5, 10, opts)).toBeLessThan(4);
-  });
-
-  it("starts the next job's climb from where the earlier run ended", () => {
-    const opts = { mid: 18, curve: 1, growth: 3 };
-    const earlier = trackPath(5, 20, { ...opts, continues: true });
-    const lift = runClimb(5, 20, { ...opts, continues: true });
-    expect(earlier.endsWith(`L 23 ${Math.round((18 - lift) * 1000) / 1000}`)).toBe(true);
-    const later = trackPath(25, 50, { ...opts, rise: 36, lift, continues: false });
-    expect(later.startsWith(`M 23 ${Math.round((54 - lift) * 1000) / 1000} `)).toBe(true);
   });
 });
