@@ -240,7 +240,7 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
       </main>
 
       <div class="site-preview" aria-hidden="true" data-preview-card>
-        <span class="site-preview-shot"><img alt="" decoding="async" /></span>
+        <span class="site-preview-shot"></span>
         <span class="site-preview-host"></span>
       </div>
 
@@ -269,7 +269,11 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
    * skip it: a tap should just follow the link. Nothing is requested until the first hover.
    */
   const card = document.querySelector<HTMLElement>("[data-preview-card]");
-  const shot = card?.querySelector("img");
+  /* The image is made here, not in the markup, so the page never ships an <img> without a src. */
+  const shot = new Image();
+  shot.alt = "";
+  shot.decoding = "async";
+  card?.querySelector(".site-preview-shot")?.append(shot);
   const host = card?.querySelector<HTMLElement>(".site-preview-host");
   if (card && shot && host && matchMedia("(hover: hover)").matches) {
     const GAP = 12;
@@ -1032,14 +1036,14 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
     border-radius: var(--radius-md);
     background: var(--rule);
   }
-  .site-preview-shot img {
+  .site-preview-shot :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: top;
     opacity: 0;
   }
-  .site-preview[data-loaded] img {
+  .site-preview[data-loaded] :global(img) {
     opacity: 1;
   }
   .site-preview-host {
@@ -1069,7 +1073,7 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
         translate var(--duration) var(--ease),
         scale var(--duration) var(--ease);
     }
-    .site-preview-shot img {
+    .site-preview-shot :global(img) {
       transition: opacity 300ms var(--ease);
     }
     /* A soft shimmer while the screenshot renders, which can take a few seconds the first time. */
