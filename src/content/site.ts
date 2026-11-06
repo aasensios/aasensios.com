@@ -113,7 +113,7 @@ export const site = {
         { light: "VmlVxZnAm7wvm", dark: "nCSNKeaXfpfyZZXDio" },
         { light: "3oKIPsx2VAYAgEHC12", dark: "LW3RVf3kqBB5lc1ilC" },
         { light: "0vcCfc5y3MXCHzpzRw", dark: "a8Zg07vQvc7qkXiTNk" },
-        { light: "z1yNjzRTCsCVW", dark: "X7Bckr1JaJS1opWTzO" },
+        { light: "oQzmXr9FploiZmZshV", dark: "X7Bckr1JaJS1opWTzO" },
       ],
     },
     {

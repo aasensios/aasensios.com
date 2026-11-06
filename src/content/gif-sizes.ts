@@ -25,7 +25,7 @@ export const gifSizes: Record<string, [number, number]> = {
   nCSNKeaXfpfyZZXDio: [200, 150],
   "3oKIPsx2VAYAgEHC12": [200, 112],
   a8Zg07vQvc7qkXiTNk: [200, 178],
-  z1yNjzRTCsCVW: [200, 172],
   SwImQhtiNA7io: [200, 124],
   "3oKIPnAiaMCws8nOsE": [200, 210],
+  oQzmXr9FploiZmZshV: [200, 200],
 };
