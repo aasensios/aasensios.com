@@ -317,46 +317,70 @@ const careerStops = site.experience
                 </button>
               </form>
             </header>
-            <div class="pack-grid" data-pack-grid></div>
+            <div class="pack-track" data-pack-track></div>
+            <nav class="pack-nav">
+              <button type="button" aria-label={copy.pack.prev} data-pack-prev>
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path d="M10 3.5 5.5 8l4.5 4.5" />
+                </svg>
+              </button>
+              <span class="pack-dots">
+                {[1, 2, 3, 4, 5, 6, 0].map((d, i) => (
+                  <button type="button" aria-label={copy.pack.days[d]} data-pack-dot={i} />
+                ))}
+              </span>
+              <button type="button" aria-label={copy.pack.next} data-pack-next>
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path d="m6 3.5 4.5 4.5L6 12.5" />
+                </svg>
+              </button>
+            </nav>
             <template data-pack-items>
-              {[1, 2, 3, 4, 5, 6, 0].flatMap((d) =>
-                site.links.flatMap((l) =>
-                  themes.map((theme) => (
-                    <figure
-                      class={`pack-item pack-day-${d}`}
-                      data-key={`${copy.pack.days[d]} · ${copy.pack.themes[theme]} · ${l.tag}`}
-                    >
-                      {review && (
-                        <button
-                          type="button"
-                          class="pack-mark"
-                          aria-pressed="false"
-                          aria-label={`${copy.pack.days[d]} · ${copy.pack.themes[theme]} · ${l.tag}`}
-                          data-mark
-                        />
-                      )}
-                      <picture>
-                        <source
-                          media="(prefers-reduced-motion: no-preference)"
-                          srcset={gifAnimated(l.gifs[d][theme])}
-                          type="image/webp"
-                        />
-                        <img
-                          src={gifStill(l.gifs[d][theme])}
-                          alt={`A ${theme === "light" ? "dog" : "cat"} ${l.meme}`}
-                          width={gifSizes[l.gifs[d][theme]][0]}
-                          height={gifSizes[l.gifs[d][theme]][1]}
-                          loading="lazy"
-                        />
-                      </picture>
-                      <figcaption>
-                        {copy.pack.days[d]} · {copy.pack.themes[theme]} · {l.tag}
-                        <span class="pack-today">{copy.pack.today}</span>
-                      </figcaption>
-                    </figure>
-                  )),
-                ),
-              )}
+              {[1, 2, 3, 4, 5, 6, 0].map((d) => (
+                <section class={`pack-slide pack-day-${d}`} data-day={d}>
+                  <h3 class="pack-slide-head">
+                    {copy.pack.days[d]}
+                    <span class="pack-today">{copy.pack.today}</span>
+                  </h3>
+                  <div class="pack-quad">
+                    {site.links.flatMap((l) =>
+                      themes.map((theme) => (
+                        <figure
+                          class="pack-item"
+                          data-key={`${copy.pack.days[d]} · ${copy.pack.themes[theme]} · ${l.tag}`}
+                        >
+                          {review && (
+                            <button
+                              type="button"
+                              class="pack-mark"
+                              aria-pressed="false"
+                              aria-label={`${copy.pack.days[d]} · ${copy.pack.themes[theme]} · ${l.tag}`}
+                              data-mark
+                            />
+                          )}
+                          <picture>
+                            <source
+                              media="(prefers-reduced-motion: no-preference)"
+                              srcset={gifAnimated(l.gifs[d][theme])}
+                              type="image/webp"
+                            />
+                            <img
+                              src={gifStill(l.gifs[d][theme])}
+                              alt={`A ${theme === "light" ? "dog" : "cat"} ${l.meme}`}
+                              width={gifSizes[l.gifs[d][theme]][0]}
+                              height={gifSizes[l.gifs[d][theme]][1]}
+                              loading="lazy"
+                            />
+                          </picture>
+                          <figcaption>
+                            {copy.pack.themes[theme]} · {l.tag}
+                          </figcaption>
+                        </figure>
+                      )),
+                    )}
+                  </div>
+                </section>
+              ))}
             </template>
             {
               review && (
@@ -485,37 +509,39 @@ const careerStops = site.experience
   }
 
   const pack = document.querySelector<HTMLDialogElement>("[data-pack]");
-  document.querySelector("[data-pack-open]")?.addEventListener("click", () => {
-    const grid = pack?.querySelector("[data-pack-grid]");
-    const items = pack?.querySelector<HTMLTemplateElement>("[data-pack-items]");
-    if (grid && items && !grid.childElementCount) grid.append(items.content.cloneNode(true));
-    pack?.showModal();
-    layoutPack();
-  });
-  /*
-   * Masonry in reading order: each GIF, Monday first, goes into whichever column is
-   * shortest so far, so the week runs across rows. Heights come from the GIFs' known sizes.
-   */
-  let packColumns = 0;
-  const layoutPack = () => {
-    const grid = pack?.querySelector<HTMLElement>("[data-pack-grid]");
-    if (!grid?.clientWidth) return;
-    const count = Math.max(1, Math.floor((grid.clientWidth + 12) / (180 + 12)));
-    if (count === packColumns) return;
-    packColumns = count;
-    const figures = [...grid.querySelectorAll<HTMLElement>(".pack-item")];
-    const columns = Array.from({ length: count }, () => document.createElement("div"));
-    const heights = columns.map(() => 0);
-    for (const figure of figures) {
-      const img = figure.querySelector("img")!;
-      const i = heights.indexOf(Math.min(...heights));
-      columns[i].append(figure);
-      heights[i] += Number(img.getAttribute("height")) / Number(img.getAttribute("width")) + 0.2;
-    }
-    for (const column of columns) column.className = "pack-column";
-    grid.replaceChildren(...columns);
+  const track = pack?.querySelector<HTMLElement>("[data-pack-track]");
+  const dots = [...(pack?.querySelectorAll<HTMLElement>("[data-pack-dot]") ?? [])];
+  const prev = pack?.querySelector<HTMLButtonElement>("[data-pack-prev]");
+  const next = pack?.querySelector<HTMLButtonElement>("[data-pack-next]");
+  const WEEK = [1, 2, 3, 4, 5, 6, 0];
+  const current = () => (track ? Math.round(track.scrollLeft / track.clientWidth) : 0);
+  const showDay = (index: number, smooth = true) => {
+    if (!track) return;
+    const i = Math.max(0, Math.min(WEEK.length - 1, index));
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    track.scrollTo({ left: i * track.clientWidth, behavior: smooth && !still ? "smooth" : "instant" });
   };
-  addEventListener("resize", () => pack?.open && layoutPack());
+  const syncNav = () => {
+    const i = current();
+    dots.forEach((dot, d) => dot.toggleAttribute("aria-current", d === i));
+    if (prev) prev.disabled = i === 0;
+    if (next) next.disabled = i === WEEK.length - 1;
+  };
+  track?.addEventListener("scroll", () => requestAnimationFrame(syncNav), { passive: true });
+  prev?.addEventListener("click", () => showDay(current() - 1));
+  next?.addEventListener("click", () => showDay(current() + 1));
+  dots.forEach((dot, d) => dot.addEventListener("click", () => showDay(d)));
+  pack?.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") showDay(current() - 1);
+    if (event.key === "ArrowRight") showDay(current() + 1);
+  });
+  document.querySelector("[data-pack-open]")?.addEventListener("click", () => {
+    const items = pack?.querySelector<HTMLTemplateElement>("[data-pack-items]");
+    if (track && items && !track.childElementCount) track.append(items.content.cloneNode(true));
+    pack?.showModal();
+    showDay(WEEK.indexOf(Number(document.documentElement.dataset.day ?? 1)), false);
+    syncNav();
+  });
   pack?.addEventListener("click", (event) => {
     if (event.target === pack) pack.close();
   });
@@ -778,7 +804,7 @@ const careerStops = site.experience
     outline-offset: var(--focus-offset);
   }
   .pack {
-    width: min(880px, calc(100vw - var(--space-8)));
+    width: min(560px, calc(100vw - var(--space-8)));
     max-height: min(85dvh, 960px);
     margin: auto;
     padding: var(--space-6);
@@ -828,26 +854,102 @@ const careerStops = site.experience
     outline: var(--focus-ring);
     outline-offset: var(--focus-offset);
   }
-  .pack-grid {
-    display: flex;
-    align-items: start;
-    gap: var(--space-3);
+  /* A day per slide: the track scrolls sideways and snaps to each one. */
+  .pack-track {
+    display: grid;
+    grid-auto-columns: 100%;
+    grid-auto-flow: column;
+    gap: var(--space-6);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
   }
-  .pack-grid :global(.pack-column) {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: var(--space-3);
+  .pack-track::-webkit-scrollbar {
+    display: none;
+  }
+  .pack-slide {
     min-width: 0;
+    margin: 0;
+    scroll-snap-align: start;
+  }
+  .pack-slide-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+    color: var(--fg);
+    font-size: var(--text-body);
+    font-weight: var(--weight-medium);
+  }
+  .pack-quad {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
   }
   .pack-item {
     margin: 0;
+  }
+  .pack-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+  .pack-nav > button {
+    display: grid;
+    place-items: center;
+    width: var(--space-8);
+    height: var(--space-8);
+    border: var(--hairline);
+    border-radius: 50%;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .pack-nav > button:disabled {
+    color: var(--rule);
+    cursor: default;
+  }
+  .pack-nav path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .pack-dots {
+    display: flex;
+    gap: var(--space-1);
+  }
+  .pack-dots button {
+    width: var(--space-2);
+    height: var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--rule);
+    cursor: pointer;
+  }
+  .pack-dots button[aria-current] {
+    width: var(--space-5);
+    background: var(--fg);
+  }
+  .pack-nav button:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pack-dots button {
+      transition:
+        width 300ms var(--ease),
+        background-color 300ms var(--ease);
+    }
   }
   .pack-item img {
     display: block;
     width: 100%;
     height: auto;
-    min-height: var(--space-16);
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
     border-radius: var(--radius-md);
     background: var(--rule);
   }

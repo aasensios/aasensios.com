@@ -149,6 +149,8 @@ export const site = {
       lede: "Dogs for daylight, cats for the mighty night. Gifs in CTAs change after switching the dark/light mode.",
       close: "Close",
       today: "Today",
+      prev: "Previous day",
+      next: "Next day",
       themes: { light: "Day", dark: "Night" },
       days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
       review: {
