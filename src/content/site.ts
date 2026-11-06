@@ -144,7 +144,7 @@ export const site = {
     theme: { label: "Dark mode", toDark: "Switch to dark mode", toLight: "Switch to light mode" },
     avatar: { open: "View photo of Alejandro Asensio", close: "Close photo" },
     pack: {
-      open: "Meet the whole pack",
+      open: "Meet the whole furry family",
       title: "The whole pack",
       lede: "A dog and a cat for each button, every day of the week. They change at your midnight.",
       close: "Close",

@@ -316,13 +316,6 @@ const careerStops = site.experience
           </p>
           <p class="pack-open-row">
             <button type="button" class="pack-open" data-pack-open>
-              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                <ellipse cx="8" cy="10.5" rx="3" ry="2.5" />
-                <circle cx="3.5" cy="7" r="1.25" />
-                <circle cx="6" cy="4.25" r="1.25" />
-                <circle cx="10" cy="4.25" r="1.25" />
-                <circle cx="12.5" cy="7" r="1.25" />
-              </svg>
               {copy.pack.open}
             </button>
           </p>
@@ -697,9 +690,6 @@ const careerStops = site.experience
     margin-top: var(--space-4);
   }
   .pack-open {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
     color: var(--muted);
     font-size: var(--text-caption);
     line-height: var(--leading-text);
@@ -715,9 +705,6 @@ const careerStops = site.experience
   .pack-open:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-offset);
-  }
-  .pack-open svg {
-    fill: currentColor;
   }
   .pack {
     width: min(880px, calc(100vw - var(--space-8)));
