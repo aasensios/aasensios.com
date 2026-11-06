@@ -268,22 +268,6 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                 <button type="button" aria-label={s.key} data-pack-story={i} />
               ))}
             </div>
-            <div class="pack-viewport">
-              <div class="pack-track" data-pack-track></div>
-              <nav class="pack-nav">
-                <button type="button" aria-label={copy.pack.prev} data-pack-prev>
-                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                    <path d="M10 3.5 5.5 8l4.5 4.5" />
-                  </svg>
-                </button>
-                <button type="button" aria-label={copy.pack.next} data-pack-next>
-                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                    <path d="m6 3.5 4.5 4.5L6 12.5" />
-                  </svg>
-                </button>
-              </nav>
-              <span class="pack-copied" role="status" data-pack-copied />
-            </div>
             <div class="pack-foot">
               <p class="pack-caption" data-pack-caption></p>
               <button
@@ -301,6 +285,22 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                   <path d="M5 3.5v9l7-4.5z" />
                 </svg>
               </button>
+            </div>
+            <div class="pack-viewport">
+              <div class="pack-track" data-pack-track></div>
+              <nav class="pack-nav">
+                <button type="button" aria-label={copy.pack.prev} data-pack-prev>
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path d="M10 3.5 5.5 8l4.5 4.5" />
+                  </svg>
+                </button>
+                <button type="button" aria-label={copy.pack.next} data-pack-next>
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path d="m6 3.5 4.5 4.5L6 12.5" />
+                  </svg>
+                </button>
+              </nav>
+              <span class="pack-copied" role="status" data-pack-copied />
             </div>
             <div class="pack-actions">
               <button type="button" data-copy-gif data-done={copy.pack.copiedGif}>
@@ -494,19 +494,36 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     scrollTo(to, smooth);
   };
   const caption = pack?.querySelector<HTMLElement>("[data-pack-caption]");
-  let captionTimer = 0;
-  const setCaption = (text: string) => {
-    if (!caption || caption.textContent === text) return;
+  let captionRun = 0;
+  /* The name nudges out the way the carousel moves and the next one slides in behind it. */
+  const setCaption = async (text: string, dir: number) => {
+    if (!caption || caption.dataset.text === text) return;
+    caption.dataset.text = text;
     if (!caption.textContent || still()) {
       caption.textContent = text;
       return;
     }
-    caption.toggleAttribute("data-fading", true);
-    clearTimeout(captionTimer);
-    captionTimer = window.setTimeout(() => {
-      caption.textContent = text;
-      caption.removeAttribute("data-fading");
-    }, 150);
+    const run = ++captionRun;
+    const shift = 12 * dir;
+    for (const animation of caption.getAnimations()) animation.cancel();
+    await caption
+      .animate(
+        [
+          { transform: "translateX(0)", opacity: 1 },
+          { transform: `translateX(${-shift}px)`, opacity: 0 },
+        ],
+        { duration: 90, easing: "ease-in", fill: "forwards" },
+      )
+      .finished.catch(() => {});
+    if (run !== captionRun) return;
+    caption.textContent = text;
+    caption.animate(
+      [
+        { transform: `translateX(${shift}px)`, opacity: 0 },
+        { transform: "translateX(0)", opacity: 1 },
+      ],
+      { duration: 160, easing: "cubic-bezier(0.2, 0.7, 0.2, 1)", fill: "forwards" },
+    );
   };
   /* Stories-style progress: earlier GIFs are full, the current one fills, later ones wait. */
   let shown = -1;
@@ -517,8 +534,10 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     const i = current();
     if (i === shown) return;
     if (shown !== -1 && track?.querySelector("[data-candidate]")) resetSuggestion();
+    const wrapped = (shown === COUNT - 1 && i === 0) || (shown === 0 && i === COUNT - 1);
+    const dir = (i > shown) !== wrapped ? 1 : -1;
     shown = i;
-    setCaption(track?.children[i]?.getAttribute("data-key") ?? "");
+    setCaption(track?.children[i]?.getAttribute("data-key") ?? "", dir);
     stories.forEach((story, s) => {
       story.toggleAttribute("data-done", s < i);
       story.toggleAttribute("aria-current", s === i);
@@ -1102,16 +1121,16 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    margin-top: var(--space-3);
+    margin-bottom: var(--space-2);
   }
+  /* Clipped, so the name slides within its own line rather than in from the dialog's edge. */
   .pack-caption {
+    min-width: 0;
+    overflow: hidden;
     margin: 0;
     color: var(--muted);
     font-size: var(--text-caption);
     line-height: var(--leading-text);
-  }
-  .pack-caption[data-fading] {
-    opacity: 0;
   }
   .pack-stage {
     position: relative;
@@ -1308,8 +1327,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     .pack[data-paused] .pack-stories button[aria-current]::after {
       animation-play-state: paused;
     }
-    .pack-copied,
-    .pack-caption {
+    .pack-copied {
       transition: opacity var(--duration) var(--ease);
     }
     .pack-actions button {
