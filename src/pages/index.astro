@@ -7,7 +7,7 @@ import Layout from "@layouts/layout.astro";
 import avatar from "../assets/avatar.jpg";
 import { site } from "../content/site";
 import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
-import { axisYears, barPosition } from "../lib/timeline";
+import { axisYears, barPosition, trackPath } from "../lib/timeline";
 
 const now = toYearMonth(new Date());
 const copy = site.copy;
@@ -18,6 +18,9 @@ const logos = import.meta.glob<SvgComponent>("../assets/logos/*.svg", {
   import: "default",
 });
 const logo = (file: string) => logos[`../assets/logos/${file}`];
+/* Career line geometry, in viewBox units: x is percent of the axis, y is pixels of a lane. */
+const LANE = 36;
+const CURVE = 1.2;
 ---
 
 <Layout
@@ -98,7 +101,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
               ))
             }
           </ul>
-          <div class="chart" style={`--years:${axis.length}`} aria-hidden="true">
+          <div class="chart" style={`--years:${axis.length};--lane:${LANE}px`} aria-hidden="true">
             <div class="grid">
               {axis.map(() => (
                 <span />
@@ -107,30 +110,43 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
             <ul class="lanes">
               {
                 site.experience.map((e, i) => {
-                  const next = site.experience[i - 1];
+                  const later = site.experience[i - 1];
+                  const earlier = site.experience[i + 1];
                   const { left, width } = barPosition(
                     e.start,
                     e.end,
                     site.firstJobStart.year,
                     now,
-                    next?.start,
+                    later?.start,
                   );
+                  const d = trackPath(left, width, {
+                    mid: LANE / 2,
+                    rise: earlier ? LANE : undefined,
+                    curve: CURVE,
+                    continues: Boolean(later),
+                  });
                   const Logo = logo(e.logo);
                   return (
                     <li
                       class="lane"
                       style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color}`}
                     >
-                      <span class="logo">
-                        <Logo width={26} height={26} aria-hidden="true" />
-                      </span>
-                      <span class="bar" />
+                      <svg class="track" viewBox={`0 0 100 ${LANE}`} preserveAspectRatio="none">
+                        <path d={d} />
+                      </svg>
+                      <span class="stop" />
+                      {!e.end && <span class="now" />}
                       <span class="card">
-                        <span class="card-title">
-                          {e.role} at {e.company}
-                          {e.client && ` for ${e.client.name}`}
+                        <span class="card-logo">
+                          <Logo width={20} height={20} aria-hidden="true" />
                         </span>
-                        <span class="card-meta">{formatPeriodMonths(e.start, e.end, now)}</span>
+                        <span class="card-text">
+                          <span class="card-title">
+                            {e.role} at {e.company}
+                            {e.client && ` for ${e.client.name}`}
+                          </span>
+                          <span class="card-meta">{formatPeriodMonths(e.start, e.end, now)}</span>
+                        </span>
                       </span>
                     </li>
                   );
@@ -195,6 +211,15 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
 </Layout>
 
 <script>
+  /* On touch screens a tap opens a lane's card; tapping it again or anywhere else closes it. */
+  if (!matchMedia("(hover: hover)").matches) {
+    const lanes = [...document.querySelectorAll<HTMLElement>(".lane")];
+    addEventListener("click", (event) => {
+      const hit = (event.target as Element).closest<HTMLElement>(".lane");
+      for (const lane of lanes) lane.toggleAttribute("data-open", lane === hit && !lane.hasAttribute("data-open"));
+    });
+  }
+
   const portrait = document.querySelector<HTMLDialogElement>("[data-avatar-dialog]");
   document.querySelector("[data-avatar-open]")?.addEventListener("click", () => portrait?.showModal());
   /* Clicking the photo or the backdrop zooms back out, like the close button. */
@@ -459,19 +484,18 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
 
   /* The table above carries the same facts, so the chart is aria-hidden. */
   .chart {
-    --lane: 44px;
-    --logo: 32px;
-    --logo-mark: 26px;
-    --logo-gap: var(--space-2);
-    --bar: 18px;
+    --stroke: 3px;
+    --stop: 12px;
+    --logo: 28px;
+    --logo-mark: 20px;
     --axis: 32px;
-    --dimmed: 0.35;
+    --dimmed: 0.3;
     --inset-x: var(--space-3);
-    --inset-y: 0px;
+    --inset-y: var(--space-2);
 
     position: relative;
     margin-top: var(--flow);
-    padding: var(--inset-y) var(--inset-x);
+    padding: var(--inset-y) var(--inset-x) 0;
     border: var(--hairline);
     border-radius: var(--radius-xl);
     corner-shape: squircle;
@@ -483,57 +507,67 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
     grid-template-columns: repeat(var(--years), 1fr);
   }
   .grid span + span {
-    border-left: var(--hairline);
+    border-left: 1px dashed var(--rule);
   }
   .lanes {
     position: relative;
     margin-top: 0;
   }
   .lane {
+    --line: light-dark(var(--brand), var(--brand-dark));
+
     position: relative;
     height: var(--lane);
   }
-  .logo {
+  /* Stretched to the lane so x maps to time; the stroke keeps its width regardless. */
+  .track {
     position: absolute;
-    top: calc((var(--lane) - var(--logo)) / 2);
-    left: max(0px, calc(var(--left) - var(--logo) - var(--logo-gap)));
-    z-index: 1;
-    display: grid;
-    place-items: center;
-    width: var(--logo);
-    height: var(--logo);
-    overflow: hidden;
-    border-radius: var(--radius-lg);
-    corner-shape: squircle;
-    background: var(--logo-bg);
-    box-shadow: 0 0 0 1px var(--rule);
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
   }
-  .logo svg {
-    width: var(--logo-mark);
-    height: var(--logo-mark);
+  .track path {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: var(--stroke);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
   }
-  .bar {
+  .stop,
+  .now {
     position: absolute;
-    top: calc((var(--lane) - var(--bar)) / 2);
+    top: 50%;
+    width: var(--stop);
+    height: var(--stop);
+    border-radius: 50%;
+    translate: -50% -50%;
+  }
+  .stop {
     left: var(--left);
-    width: var(--width);
-    height: var(--bar);
-    border-radius: var(--radius-sm);
-    background: light-dark(var(--brand), var(--brand-dark));
+    border: var(--stroke) solid var(--line);
+    background: var(--bg);
   }
-  .lanes:hover .lane:not(:hover) .bar,
-  .lanes:hover .lane:not(:hover) .logo {
+  .now {
+    left: calc(var(--left) + var(--width));
+    background: var(--line);
+    box-shadow: 0 0 0 var(--stroke) var(--bg);
+  }
+  .lanes:has(.lane:is(:hover, [data-open])) .lane:not(:hover, [data-open]) :is(.track, .stop, .now) {
     opacity: var(--dimmed);
   }
-  .lane:hover {
+  .lane:is(:hover, [data-open]) {
     z-index: 2;
   }
   .card {
     position: absolute;
     top: calc(var(--lane) - var(--space-1));
-    left: clamp(0px, calc(var(--left) - var(--logo) - var(--logo-gap)), calc(100% - var(--popover)));
+    left: clamp(0px, calc(var(--left) - var(--space-4)), calc(100% - var(--popover)));
     z-index: 1;
-    display: grid;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
     width: max-content;
     max-width: var(--popover);
     padding: var(--space-2) var(--space-3);
@@ -546,7 +580,33 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
     opacity: 0;
     pointer-events: none;
   }
-  .lane:hover .card {
+  .card-logo {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: var(--logo);
+    height: var(--logo);
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    corner-shape: squircle;
+    background: var(--logo-bg);
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+  .card-logo svg {
+    width: var(--logo-mark);
+    height: var(--logo-mark);
+  }
+  .card-text {
+    display: grid;
+  }
+  /* Touch screens keep :hover after a tap, so taps toggle data-open instead. */
+  @media (hover: hover) {
+    .lane:hover .card {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+  .lane[data-open] .card {
     visibility: visible;
     opacity: 1;
   }
@@ -565,8 +625,9 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
     text-align: center;
   }
   @media (prefers-reduced-motion: no-preference) {
-    .bar,
-    .logo {
+    .track,
+    .stop,
+    .now {
       transition: opacity var(--duration) var(--ease);
     }
     .card {
@@ -574,7 +635,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
         opacity var(--duration) var(--ease),
         visibility 0s var(--duration);
     }
-    .lane:hover .card {
+    .lane:is(:hover, [data-open]) .card {
       transition: opacity var(--duration) var(--ease);
     }
   }
