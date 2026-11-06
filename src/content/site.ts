@@ -26,7 +26,7 @@ export type DayGif = { light: string; dark: string };
 /** Indexed like `Date#getDay()`, Sunday first. */
 export type Week = [DayGif, DayGif, DayGif, DayGif, DayGif, DayGif, DayGif];
 
-export type ContactLink = Link & { meme: string; gifs: Week };
+export type ContactLink = Link & { tag: string; meme: string; gifs: Week };
 
 export const site = {
   name: "Alejandro Asensio",
@@ -104,6 +104,7 @@ export const site = {
     {
       label: "Say hi on LinkedIn",
       href: "https://www.linkedin.com/in/aasensios/",
+      tag: "Hi",
       meme: "waving hello",
       gifs: [
         { light: "lv8qrl7TTuFj6QN3bM", dark: "ToMjGpRZ4gF6YuAT4li" },
@@ -118,6 +119,7 @@ export const site = {
     {
       label: "See my work on GitHub",
       href: "https://github.com/aasensios",
+      tag: "Work",
       meme: "at a computer",
       gifs: [
         { light: "SX71qs3TDxVkvbLJ4o", dark: "VbnUQpnihPSIgIXuZv" },
@@ -147,6 +149,7 @@ export const site = {
       lede: "A dog and a cat for each button, every day of the week. They change at your midnight.",
       close: "Close",
       today: "Today",
+      themes: { light: "Day", dark: "Night" },
       days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     },
     chart: {
