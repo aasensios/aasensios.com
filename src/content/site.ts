@@ -112,7 +112,8 @@ export const site = {
   ] satisfies ContactLink[],
 
   copy: {
-    headline: "I make screens you can leave.",
+    /** `emphasis` is set in italics after `text`, before the full stop. */
+    headline: { text: "I make screens you can leave", emphasis: "calmly" },
     intro: [
       "Building digital products taught me one thing: the best interfaces get you what you need, then let you go.",
       "Software is a tool, not the final goal itself. So I tend to cut steps, make the next action obvious, and keep things fast. The fewer minutes you spend with my screens, the better I've done my job.",
