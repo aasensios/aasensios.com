@@ -83,7 +83,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
         <dialog class="portrait" aria-label={site.name} closedby="any" data-avatar-dialog>
           <Image class="portrait-img" src={avatar} alt={site.name} width={256} height={320} densities={[1, 2]} />
           <form method="dialog">
-            <button type="submit" class="portrait-close" aria-label={copy.avatar.close}>
+            <button type="submit" class="dialog-close" aria-label={copy.avatar.close}>
               <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
                 <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
               </svg>
@@ -836,6 +836,10 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     --radius-md: 8px;
     --radius-lg: 10px;
     --radius-xl: 16px;
+    /* Dialogs: a 32px close button inset 12px sits concentric in this corner (12 + 16). */
+    --close: var(--space-8);
+    --close-inset: var(--space-3);
+    --radius-dialog: calc(var(--close-inset) + var(--close) / 2);
     --radius-pill: 999px;
 
     /* Sizes */
@@ -922,38 +926,15 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     width: min(var(--portrait), calc(100vw - var(--space-10)));
     height: auto;
     aspect-ratio: 4 / 5;
-    /* The same corners as the gallery dialog, so both pop-ups read as one family. */
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-dialog);
     corner-shape: squircle;
     cursor: zoom-out;
   }
-  /* On phones the photo opens almost full screen, with a slim margin, and Close moves inside it. */
+  /* On phones the photo opens almost full screen, with a slim margin. */
   @media (max-width: 480px) {
     .portrait-img {
       width: calc(100vw - var(--space-6));
     }
-    .portrait .portrait-close {
-      top: var(--space-3);
-      right: var(--space-3);
-    }
-  }
-  .portrait-close {
-    position: absolute;
-    top: calc(var(--space-2) * -1);
-    right: calc(var(--space-2) * -1);
-    display: grid;
-    place-items: center;
-    width: var(--space-8);
-    height: var(--space-8);
-    border: var(--hairline);
-    border-radius: 50%;
-    background: var(--bg);
-    color: var(--fg);
-    cursor: pointer;
-  }
-  .portrait-close:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
   }
   .pack-open-row {
     margin-top: var(--space-4);
@@ -1046,7 +1027,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     margin: auto;
     padding: var(--space-6);
     border: var(--hairline);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-dialog);
     corner-shape: squircle;
     background: var(--bg);
     color: var(--fg);
@@ -1061,7 +1042,8 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     justify-content: space-between;
     gap: var(--space-4);
     margin: calc(var(--space-6) * -1) calc(var(--space-6) * -1) 0;
-    padding: var(--space-6) var(--space-6) var(--space-4);
+    padding: var(--space-6) calc(var(--close-inset) + var(--close) + var(--space-3)) var(--space-4)
+      var(--space-6);
     background: var(--bg);
   }
   .pack-title {
@@ -1076,14 +1058,19 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     color: var(--muted);
     font-size: var(--text-caption);
   }
+  /* One close button for every dialog, tucked into its top-right corner. */
   .dialog-close {
+    position: absolute;
+    top: var(--close-inset);
+    right: var(--close-inset);
+    z-index: 2;
     display: grid;
-    flex: none;
     place-items: center;
-    width: var(--space-8);
-    height: var(--space-8);
+    width: var(--close);
+    height: var(--close);
     border: var(--hairline);
     border-radius: 50%;
+    background: var(--bg);
     color: var(--fg);
     cursor: pointer;
   }
