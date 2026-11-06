@@ -287,7 +287,8 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                       type="button"
                       class="pack-gif"
                       aria-label={`${copy.pack.copy}: ${s.key}`}
-                      data-copy={`https://giphy.com/gifs/${s.id}`}
+                      data-copy={s.id}
+                      data-hint={copy.pack.hint}
                     >
                       <picture>
                         <source
@@ -301,26 +302,32 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                           width={gifSizes[s.id][0]}
                           height={gifSizes[s.id][1]}
                           loading="lazy"
+                          crossorigin="anonymous"
                         />
                       </picture>
                     </button>
-                    {review && (
-                      <span class="pack-suggest" data-suggest data-none={copy.pack.review.none}>
-                        <button type="button" data-suggest-next data-again={copy.pack.review.another}>
-                          {copy.pack.review.suggest}
-                        </button>
-                        <button type="button" data-suggest-use hidden>
-                          {copy.pack.review.use}
-                        </button>
-                        <button type="button" data-suggest-cancel hidden>
-                          {copy.pack.review.cancel}
-                        </button>
-                      </span>
-                    )}
                   </div>
                 </section>
               ))}
             </template>
+            {
+              review && (
+                <footer class="pack-dev" data-suggest data-none={copy.pack.review.none}>
+                  <span class="pack-dev-badge">{copy.pack.review.badge}</span>
+                  <span class="pack-dev-actions">
+                    <button type="button" data-suggest-cancel hidden>
+                      {copy.pack.review.cancel}
+                    </button>
+                    <button type="button" data-suggest-next data-again={copy.pack.review.another}>
+                      {copy.pack.review.suggest}
+                    </button>
+                    <button type="button" data-suggest-use hidden>
+                      {copy.pack.review.use}
+                    </button>
+                  </span>
+                </footer>
+              )
+            }
           </dialog>
         </section>
       </main>
@@ -466,6 +473,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     if (atCopy && !rewinding) scrollTo(0, false);
     const i = current();
     if (i === shown) return;
+    if (shown !== -1 && track?.querySelector("[data-candidate]")) resetSuggestion();
     shown = i;
     setCaption(track?.children[i]?.getAttribute("data-key") ?? "");
     stories.forEach((story, s) => {
@@ -528,8 +536,30 @@ const place = (e: (typeof site.experience)[number], i: number) =>
   pack?.addEventListener("click", async (event) => {
     const gif = (event.target as Element).closest<HTMLElement>("[data-copy]");
     if (!gif || !copied) return;
+    const slide = gif.closest<HTMLElement>(".pack-slide");
+    const id = slide?.dataset.candidate ?? gif.dataset.copy!;
+    const base = `https://media.giphy.com/media/${id}`;
+    /*
+     * Browsers only put still images on the clipboard, so the GIF goes on as HTML (rich editors
+     * paste it animated) plus a PNG of its first frame for apps that only take pictures.
+     */
+    const frame = (async () => {
+      const still = new Image();
+      still.crossOrigin = "anonymous";
+      still.src = `${base}/giphy_s.gif`;
+      await still.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = still.naturalWidth;
+      canvas.height = still.naturalHeight;
+      canvas.getContext("2d")!.drawImage(still, 0, 0);
+      return new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("No frame"))), "image/png"),
+      );
+    })();
+    const alt = gif.querySelector("img")?.alt ?? "";
+    const html = new Blob([`<img src="${base}/giphy.gif" alt="${alt}">`], { type: "text/html" });
     try {
-      await navigator.clipboard.writeText(gif.dataset.copy!);
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": frame, "text/html": html })]);
     } catch {
       return;
     }
@@ -543,33 +573,38 @@ const place = (e: (typeof site.experience)[number], i: number) =>
   });
 
   /*
-   * Dev only: ask the dev server for another GIF that fits the slot, preview it in place, and
-   * write the chosen one into the site's source. Nothing is kept in the browser.
+   * Dev only: ask the dev server for another GIF that fits the current slot, preview it in
+   * place, and write the chosen one into the site's source. Nothing is kept in the browser.
    */
-  pack?.addEventListener("click", async (event) => {
-    const button = (event.target as Element).closest<HTMLButtonElement>("[data-suggest] button");
-    const slide = button?.closest<HTMLElement>(".pack-slide");
-    if (!button || !slide) return;
-    const tools = slide.querySelector<HTMLElement>("[data-suggest]")!;
-    const [suggest, use, cancel] = tools.querySelectorAll("button");
-    const img = slide.querySelector("img")!;
-    const source = slide.querySelector("source")!;
-    const original = slide.dataset.original ?? (slide.dataset.original = img.getAttribute("src")!);
-    const showGif = (still: string, animated: string) => {
-      img.src = still;
-      source.srcset = animated;
-    };
-    const reset = () => {
-      showGif(original, original.replace("200w_s.gif", "200w.webp"));
+  const tools = pack?.querySelector<HTMLElement>("[data-suggest]");
+  const [suggest, use, cancel] = [
+    tools?.querySelector<HTMLButtonElement>("[data-suggest-next]"),
+    tools?.querySelector<HTMLButtonElement>("[data-suggest-use]"),
+    tools?.querySelector<HTMLButtonElement>("[data-suggest-cancel]"),
+  ];
+  const showGif = (slide: HTMLElement, id: string) => {
+    const base = `https://media.giphy.com/media/${id}`;
+    slide.querySelector("img")!.src = `${base}/200w_s.gif`;
+    slide.querySelector("source")!.srcset = `${base}/200w.webp`;
+  };
+  const resetSuggestion = () => {
+    for (const slide of track?.querySelectorAll<HTMLElement>("[data-candidate]") ?? []) {
+      showGif(slide, slide.querySelector<HTMLElement>("[data-copy]")!.dataset.copy!);
       delete slide.dataset.candidate;
-      slide.dataset.skip = "";
+      delete slide.dataset.skip;
+    }
+    if (suggest && use && cancel) {
       suggest.textContent = suggest.dataset.label ?? suggest.textContent;
       use.hidden = cancel.hidden = true;
-      hold();
-    };
-    if (button === cancel) return reset();
-    if (button === suggest) {
-      suggest.dataset.label ??= suggest.textContent!;
+    }
+    hold();
+  };
+  if (tools && suggest && use && cancel) {
+    suggest.dataset.label = suggest.textContent!;
+    cancel.addEventListener("click", resetSuggestion);
+    suggest.addEventListener("click", async () => {
+      const slide = track?.children[current()] as HTMLElement | undefined;
+      if (!slide) return;
       suggest.disabled = true;
       const kind = slide.dataset.theme === "light" ? "dog" : "cat";
       const skip = [slide.dataset.skip, slide.dataset.candidate].filter(Boolean).join(",");
@@ -583,14 +618,14 @@ const place = (e: (typeof site.experience)[number], i: number) =>
       slide.dataset.skip = skip;
       slide.dataset.candidate = gif.id;
       slide.dataset.size = `${gif.width}x${gif.height}`;
-      const base = `https://media.giphy.com/media/${gif.id}`;
-      showGif(`${base}/200w_s.gif`, `${base}/200w.webp`);
+      showGif(slide, gif.id);
       suggest.textContent = suggest.dataset.again!;
       use.hidden = cancel.hidden = false;
       hold();
-      return;
-    }
-    if (button === use && slide.dataset.candidate) {
+    });
+    use.addEventListener("click", async () => {
+      const slide = track?.querySelector<HTMLElement>("[data-candidate]");
+      if (!slide) return;
       const [width, height] = slide.dataset.size!.split("x").map(Number);
       use.disabled = true;
       const res = await fetch("/__gifs/use", {
@@ -611,8 +646,8 @@ const place = (e: (typeof site.experience)[number], i: number) =>
       }
       location.hash = `family-${current()}`;
       location.reload();
-    }
-  });
+    });
+  }
 
   const portrait = document.querySelector<HTMLDialogElement>("[data-avatar-dialog]");
   document.querySelector("[data-avatar-open]")?.addEventListener("click", () => portrait?.showModal());
@@ -921,7 +956,6 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     overflow: hidden;
     border-radius: var(--radius-md);
     background: color-mix(in oklab, var(--rule) 50%, var(--bg));
-    cursor: copy;
   }
   .pack-gif picture {
     display: contents;
@@ -931,6 +965,37 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+  /* A centred hint on hover or keyboard focus; it steps aside while "Copied" shows. */
+  .pack-gif {
+    position: relative;
+  }
+  .pack-gif::after {
+    content: attr(data-hint);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-pill);
+    background: rgb(0 0 0 / 0.65);
+    color: #fff;
+    font-size: var(--text-caption);
+    line-height: var(--leading-text);
+    white-space: nowrap;
+    translate: -50% -50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+  @media (hover: hover) {
+    .pack-gif:hover::after {
+      opacity: 1;
+    }
+  }
+  .pack-gif:focus-visible::after {
+    opacity: 1;
+  }
+  .pack:has(.pack-copied[data-show]) .pack-gif::after {
+    opacity: 0;
   }
   .pack-gif:focus-visible {
     outline: var(--focus-ring);
@@ -1033,7 +1098,8 @@ const place = (e: (typeof site.experience)[number], i: number) =>
       animation-play-state: paused;
     }
     .pack-copied,
-    .pack-caption {
+    .pack-caption,
+    .pack-gif::after {
       transition: opacity var(--duration) var(--ease);
     }
   }
@@ -1042,38 +1108,61 @@ const place = (e: (typeof site.experience)[number], i: number) =>
       scale: 0 1;
     }
   }
-  .pack-suggest {
-    position: absolute;
-    top: var(--space-2);
-    right: var(--space-2);
-    z-index: 1;
+  /* Dev-only tools look like caution tape, so they never pass for part of the site. */
+  .pack-dev {
+    position: sticky;
+    bottom: calc(var(--space-6) * -1);
+    z-index: 2;
     display: flex;
-    gap: var(--space-1);
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin: var(--space-4) calc(var(--space-6) * -1) calc(var(--space-6) * -1);
+    padding: var(--space-3) var(--space-6);
+    border-top: 3px solid #f5b400;
+    background:
+      repeating-linear-gradient(-45deg, rgb(245 180 0 / 0.16) 0 10px, transparent 10px 20px),
+      var(--bg);
   }
-  .pack-suggest button {
+  .pack-dev-badge {
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    background: #f5b400;
+    color: #1a1400;
+    font-size: var(--text-micro);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .pack-dev-actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .pack-dev button {
     padding: var(--space-1) var(--space-3);
-    border: var(--hairline);
+    border: 1px solid #f5b400;
     border-radius: var(--radius-pill);
     background: var(--bg);
     color: var(--fg);
     font-size: var(--text-caption);
     cursor: pointer;
   }
-  .pack-suggest [data-suggest-use] {
-    border-color: var(--fg);
-    background: var(--fg);
-    color: var(--bg);
+  .pack-dev [data-suggest-use] {
+    background: #f5b400;
+    color: #1a1400;
+    font-weight: var(--weight-medium);
   }
-  .pack-suggest button:disabled {
+  .pack-dev button:disabled {
     opacity: 0.6;
     cursor: progress;
   }
-  .pack-suggest button:focus-visible {
+  .pack-dev button:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-offset);
   }
   .pack-slide[data-candidate] .pack-gif {
-    outline: 2px dashed var(--fg);
+    outline: 3px dashed #f5b400;
     outline-offset: -2px;
   }
   @media (prefers-reduced-motion: no-preference) {
