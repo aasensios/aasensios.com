@@ -185,7 +185,11 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
 <script>
   const toggle = document.querySelector<HTMLElement>("[data-theme-toggle]");
   const sky = toggle?.querySelector<HTMLElement>(".sky");
-  if (toggle && sky && matchMedia("(hover: hover)").matches) {
+  if (
+    toggle &&
+    sky &&
+    matchMedia("(hover: hover) and (prefers-reduced-motion: no-preference)").matches
+  ) {
     toggle.addEventListener("pointermove", (event) => {
       const box = sky.getBoundingClientRect();
       const tx = ((event.clientX - box.left) / box.width - 0.5) * 2;
@@ -589,15 +593,21 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
     line-height: var(--leading-text);
     visibility: hidden;
     opacity: 0;
-    transition:
-      opacity var(--duration) var(--ease),
-      visibility 0s var(--duration);
   }
   /* Touch screens keep :hover after a tap, so the tip only follows a real pointer. */
   @media (hover: hover) {
     .scheme:hover .tip {
       visibility: visible;
       opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .tip {
+      transition:
+        opacity var(--duration) var(--ease),
+        visibility 0s var(--duration);
+    }
+    .scheme:hover .tip {
       transition: opacity var(--duration) var(--ease);
     }
   }

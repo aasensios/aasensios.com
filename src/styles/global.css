@@ -149,3 +149,11 @@ body {
     scroll-behavior: smooth;
   }
 }
+/* The toggle already skips the view transition; this also covers one started elsewhere. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
