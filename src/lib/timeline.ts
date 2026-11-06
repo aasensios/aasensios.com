@@ -33,12 +33,10 @@ type TrackOptions = {
   lift?: number;
 };
 
-/** Where a lane's run stops: early by `2 * curve` when a later job climbs out of it. */
 export function runEnd(left: number, width: number, curve: number, continues: boolean): number {
   return Math.max(left, left + width - (continues ? curve * 2 : 0));
 }
 
-/** How much a lane's run climbs from its start to its end. */
 export function runClimb(left: number, width: number, opts: TrackOptions): number {
   return (opts.slope ?? 0) * (runEnd(left, width, opts.curve, opts.continues) - left);
 }

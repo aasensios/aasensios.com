@@ -48,7 +48,6 @@ const { title, description } = Astro.props;
       (() => {
         const root = document.documentElement;
         root.dataset.js = "";
-        /* The contact memes change with the visitor's local day, so pick it before paint. */
         const setDay = () => {
           root.dataset.day = String(new Date().getDay());
           const midnight = new Date();

@@ -68,7 +68,6 @@ body {
 
 :root {
   color-scheme: light dark;
-  /* The page sky shifts slowly; the sun/moon swap is quicker so the button feels responsive. */
   --daybreak: 1600ms;
   --daybreak-ease: cubic-bezier(0.37, 0, 0.63, 1);
   --swap: 450ms;
@@ -80,13 +79,7 @@ body {
   color-scheme: dark;
 }
 
-/*
- * Dawn and dusk: daylight is a soft vertical gradient two screens tall that climbs from
- * the horizon (or sinks into it). There is no edge, only light gathering from below,
- * warm where it is newest and neutral once it has fully risen.
- * The mask is four screens tall: a transparent screen on top, a two-screen fade,
- * and an opaque screen at the bottom. Sliding it reveals one screen at a time.
- */
+/* The mask is four screens tall: a clear screen, a two-screen fade, an opaque screen. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -134,7 +127,6 @@ body {
     filter: sepia(0.5) saturate(1.5) hue-rotate(-15deg) brightness(0.9);
   }
 }
-/* The night snapshot pales a little as light arrives, and deepens back as it leaves. */
 @keyframes night-lifts {
   to {
     filter: brightness(1.25) saturate(0.85);
@@ -157,7 +149,6 @@ body {
     scroll-behavior: smooth;
   }
 }
-/* The toggle already skips the view transition; this also covers one started elsewhere. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),

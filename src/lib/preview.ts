@@ -15,7 +15,6 @@ export function previewImage(url: string): string {
   return `https://api.microlink.io/?${params}`;
 }
 
-/** The host a visitor will land on, without the `www.` noise. */
 export function previewHost(url: string): string {
   return new URL(url).hostname.replace(/^www\./, "");
 }

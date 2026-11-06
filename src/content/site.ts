@@ -21,16 +21,11 @@ export type Project = {
 
 export type Link = { label: string; href: string };
 
-/** Giphy ids for one day's meme on a contact button: a dog in light mode, a cat in dark mode. */
 export type DayGif = { light: string; dark: string };
 
-/**
- * Seven days of memes, indexed like `Date#getDay()`: Sunday first. The visitor's local
- * day picks one, and the page switches to the next at their local midnight.
- */
+/** Indexed like `Date#getDay()`, Sunday first. */
 export type Week = [DayGif, DayGif, DayGif, DayGif, DayGif, DayGif, DayGif];
 
-/** `meme` describes what the animals do, for the gallery's alt text. */
 export type ContactLink = Link & { meme: string; gifs: Week };
 
 export const site = {
@@ -137,7 +132,6 @@ export const site = {
   ] satisfies ContactLink[],
 
   copy: {
-    /** `emphasis` is set in italics after `text`, before the full stop. */
     headline: { text: "I make screens you can leave", emphasis: "calmly" },
     intro: [
       "Building digital products taught me one thing: the best interfaces get you what you need, then let you go.",
