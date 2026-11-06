@@ -4,7 +4,8 @@ import type { SvgComponent } from "astro/types";
 import Moon from "../assets/icons/moon.svg";
 import Sun from "../assets/icons/sun.svg";
 import Layout from "@layouts/layout.astro";
-import avatar from "../assets/avatar.jpg";
+import avatarDay from "../assets/avatar-day.jpg";
+import avatarNight from "../assets/avatar-night.jpg";
 import { gifSizes } from "../content/gif-sizes";
 import { site, type DayGif } from "../content/site";
 import { formatMonthRange, formatPeriod, toYearMonth, yearsSince } from "../lib/dates";
@@ -70,18 +71,30 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     <div class="wrap">
       <header class="head">
         <button type="button" class="avatar-open" aria-label={copy.avatar.open} data-avatar-open>
-          <Image
-            class="avatar"
-            src={avatar}
-            alt=""
-            width={56}
-            height={70}
-            densities={[1, 2]}
-            loading="eager"
-          />
+          {[avatarDay, avatarNight].map((src, i) => (
+            <Image
+              class={`avatar ${i ? "night-only" : "day-only"}`}
+              src={src}
+              alt=""
+              width={56}
+              height={70}
+              densities={[1, 2]}
+              loading="eager"
+            />
+          ))}
         </button>
         <dialog class="portrait" aria-label={site.name} closedby="any" data-avatar-dialog>
-          <Image class="portrait-img" src={avatar} alt={site.name} width={256} height={320} densities={[1, 2]} />
+          {[avatarDay, avatarNight].map((src, i) => (
+            <Image
+              class={`portrait-img ${i ? "night-only" : "day-only"}`}
+              src={src}
+              alt={site.name}
+              width={256}
+              height={320}
+              densities={[1, 2]}
+              loading="lazy"
+            />
+          ))}
           <form method="dialog">
             <button type="submit" class="dialog-close" aria-label={copy.avatar.close}>
               <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
@@ -937,6 +950,11 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     display: flex;
     align-items: center;
     gap: var(--space-4);
+  }
+  /* A daytime photo in light mode, an evening one in dark mode. */
+  :global([data-theme="dark"]) .day-only,
+  :global(:root:not([data-theme="dark"])) .night-only {
+    display: none;
   }
   /* A 4:5 portrait; the radii are 30% of the width on both axes, so the corners stay round. */
   .avatar {
