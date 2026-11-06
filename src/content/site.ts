@@ -107,6 +107,7 @@ export const site = {
     facts: (years: number) =>
       `I've been shipping software for more than ${years} years now. Based in Barcelona, working fully remote.`,
     theme: { label: "Dark mode", toDark: "Switch to dark mode", toLight: "Switch to light mode" },
+    avatar: { open: "View photo of Alejandro Asensio", close: "Close photo" },
     footer: [
       { label: "Made with", link: { label: "Astro", href: "https://astro.build/" } },
       {

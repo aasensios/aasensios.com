@@ -27,15 +27,27 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
   <div class="page">
     <div class="wrap">
       <header class="head">
-        <Image
-          class="avatar"
-          src={avatar}
-          alt=""
-          width={56}
-          height={56}
-          densities={[1, 2]}
-          loading="eager"
-        />
+        <button type="button" class="avatar-open" aria-label={copy.avatar.open} data-avatar-open>
+          <Image
+            class="avatar"
+            src={avatar}
+            alt=""
+            width={56}
+            height={56}
+            densities={[1, 2]}
+            loading="eager"
+          />
+        </button>
+        <dialog class="portrait" aria-label={site.name} closedby="any" data-avatar-dialog>
+          <Image class="portrait-img" src={avatar} alt={site.name} width={256} height={256} />
+          <form method="dialog">
+            <button type="submit" class="portrait-close" aria-label={copy.avatar.close}>
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+            </button>
+          </form>
+        </dialog>
         <span class="scheme">
           <button type="button" aria-label={copy.theme.label} aria-pressed="false" data-theme-toggle>
             <span class="sky">
@@ -183,6 +195,11 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
 </Layout>
 
 <script>
+  const portrait = document.querySelector<HTMLDialogElement>("[data-avatar-dialog]");
+  document.querySelector("[data-avatar-open]")?.addEventListener("click", () => portrait?.showModal());
+  /* Clicking the photo or the backdrop zooms back out, like the close button. */
+  portrait?.addEventListener("click", () => portrait.close());
+
   const toggle = document.querySelector<HTMLElement>("[data-theme-toggle]");
   const sky = toggle?.querySelector<HTMLElement>(".sky");
   if (
@@ -266,6 +283,7 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
     /* Sizes */
     --measure: 640px;
     --avatar: 56px;
+    --portrait: 256px;
     --tap: 64px;
     --icon: 56px;
     --popover: 240px;
@@ -311,6 +329,82 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
     height: var(--avatar);
     border-radius: 30%;
     corner-shape: squircle;
+  }
+  .avatar-open {
+    border-radius: 30%;
+    corner-shape: squircle;
+    cursor: zoom-in;
+  }
+  .avatar-open:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  /* The dialog sits in the top layer, so it carries its own colours from the page tokens. */
+  .portrait {
+    margin: auto;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+  }
+  .portrait::backdrop {
+    background: rgb(0 0 0 / 0.6);
+    backdrop-filter: blur(4px);
+  }
+  .portrait-img {
+    width: min(var(--portrait), calc(100vw - var(--space-10)));
+    height: auto;
+    border-radius: 30%;
+    corner-shape: squircle;
+    cursor: zoom-out;
+  }
+  .portrait-close {
+    position: absolute;
+    top: calc(var(--space-2) * -1);
+    right: calc(var(--space-2) * -1);
+    display: grid;
+    place-items: center;
+    width: var(--space-8);
+    height: var(--space-8);
+    border: var(--hairline);
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .portrait-close:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .portrait,
+    .portrait::backdrop {
+      transition:
+        opacity var(--duration) var(--ease),
+        scale var(--duration) var(--ease),
+        overlay var(--duration) allow-discrete,
+        display var(--duration) allow-discrete;
+      opacity: 0;
+    }
+    .portrait {
+      scale: 0.96;
+    }
+    .portrait[open],
+    .portrait[open]::backdrop {
+      opacity: 1;
+      scale: 1;
+    }
+    @starting-style {
+      .portrait[open],
+      .portrait[open]::backdrop {
+        opacity: 0;
+      }
+      .portrait[open] {
+        scale: 0.96;
+      }
+    }
   }
 
   .byline {
