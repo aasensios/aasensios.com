@@ -1219,18 +1219,20 @@ const careerStops = site.experience
     --axis: 28px;
     --dimmed: 0.3;
     --inset-x: var(--space-3);
+    /* Today's marker sits on the right edge of the plot, so that side keeps room for it. */
+    --inset-end: calc(var(--inset-x) + var(--space-4));
     --inset-y: var(--space-5);
 
     position: relative;
     margin-top: var(--flow);
-    padding: var(--inset-y) var(--inset-x) var(--space-3);
+    padding: var(--inset-y) var(--inset-end) var(--space-3) var(--inset-x);
     border: var(--hairline);
     border-radius: var(--radius-xl);
     corner-shape: squircle;
   }
   .grid {
     position: absolute;
-    inset: 0 var(--inset-x);
+    inset: 0 var(--inset-end) 0 var(--inset-x);
     display: grid;
     grid-template-columns: repeat(var(--years), 1fr);
   }
