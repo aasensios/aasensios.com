@@ -146,13 +146,14 @@ export const site = {
     pack: {
       open: "Meet the family",
       title: "Meet the family",
-      lede: "Dogs for daylight, cats for the mighty night. Each day brings a new pair to the buttons, and switching between light and dark swaps them. Click any GIF to copy it.",
+      lede: "Dogs for daylight, cats for the mighty night. Each day brings a new pair to the buttons, and switching between light and dark swaps them. Copy any of them as a GIF or as a Giphy link.",
       close: "Close",
       prev: "Previous GIF",
       next: "Next GIF",
-      copy: "Copy this GIF",
-      hint: "Click to copy",
-      copied: "Copied GIF",
+      copyLink: "Copy Giphy URL",
+      copyGif: "Copy GIF",
+      copiedLink: "Copied Giphy URL",
+      copiedGif: "Copied GIF",
       themes: { light: "Day", dark: "Night" },
       days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
       review: {

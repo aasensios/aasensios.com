@@ -227,6 +227,17 @@ const place = (e: (typeof site.experience)[number], i: number) =>
           </p>
           <p class="pack-open-row">
             <button type="button" class="pack-open" data-pack-open>
+              <span class="family" aria-hidden="true">
+                {site.links.flatMap((l) =>
+                  themes.map((theme) => (
+                    <span class="pet">
+                      {l.gifs.map((day, d) => (
+                        <span class={`face day day-${d}`} style={`--face:url(${gifStill(day[theme])})`} />
+                      ))}
+                    </span>
+                  )),
+                )}
+              </span>
               {copy.pack.open}
             </button>
           </p>
@@ -256,7 +267,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
             </div>
             <div class="pack-viewport">
               <div class="pack-track" data-pack-track></div>
-              <span class="pack-copied" role="status" data-pack-copied data-text={copy.pack.copied} />
+              <span class="pack-copied" role="status" data-pack-copied />
             </div>
             <div class="pack-foot">
               <p class="pack-caption" data-pack-caption></p>
@@ -273,6 +284,20 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                 </button>
               </nav>
             </div>
+            <div class="pack-actions">
+              <button type="button" data-copy-link data-done={copy.pack.copiedLink}>
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1" />
+                </svg>
+                {copy.pack.copyLink}
+              </button>
+              <button type="button" data-copy-gif data-done={copy.pack.copiedGif}>
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path d="M5.5 5.5V3.5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M3.5 5.5h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z" />
+                </svg>
+                {copy.pack.copyGif}
+              </button>
+            </div>
             <template data-pack-items>
               {slides.map((s) => (
                 <section
@@ -283,13 +308,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                   data-tag={s.tag}
                 >
                   <div class="pack-stage">
-                    <button
-                      type="button"
-                      class="pack-gif"
-                      aria-label={`${copy.pack.copy}: ${s.key}`}
-                      data-copy={s.id}
-                      data-hint={copy.pack.hint}
-                    >
+                    <div class="pack-gif" data-gif={s.id}>
                       <picture>
                         <source
                           media="(prefers-reduced-motion: no-preference)"
@@ -305,7 +324,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                           crossorigin="anonymous"
                         />
                       </picture>
-                    </button>
+                    </div>
                   </div>
                 </section>
               ))}
@@ -496,13 +515,17 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     if (event.key === "ArrowRight") show(current() + 1);
   });
   /* Hovering, focusing or reviewing a GIF holds its bar, so there's time to look or copy. */
+  const holders = [track, pack?.querySelector<HTMLElement>(".pack-actions")];
   const hold = () =>
     pack?.toggleAttribute(
       "data-paused",
-      !!track && (track.matches(":hover, :focus-within") || !!track.querySelector("[data-candidate]")),
+      holders.some((el) => el?.matches(":hover, :focus-within")) ||
+        !!track?.querySelector("[data-candidate]"),
     );
-  for (const type of ["pointerenter", "pointerleave", "focusin", "focusout"]) {
-    track?.addEventListener(type, () => requestAnimationFrame(hold));
+  for (const el of holders) {
+    for (const type of ["pointerenter", "pointerleave", "focusin", "focusout"]) {
+      el?.addEventListener(type, () => requestAnimationFrame(hold));
+    }
   }
   const openPack = (index: number) => {
     const items = pack?.querySelector<HTMLTemplateElement>("[data-pack-items]");
@@ -533,12 +556,39 @@ const place = (e: (typeof site.experience)[number], i: number) =>
 
   const copied = pack?.querySelector<HTMLElement>("[data-pack-copied]");
   let copiedTimer = 0;
-  pack?.addEventListener("click", async (event) => {
-    const gif = (event.target as Element).closest<HTMLElement>("[data-copy]");
-    if (!gif || !copied) return;
-    const slide = gif.closest<HTMLElement>(".pack-slide");
-    const id = slide?.dataset.candidate ?? gif.dataset.copy!;
-    const base = `https://media.giphy.com/media/${id}`;
+  const flash = (text: string) => {
+    if (!copied) return;
+    copied.textContent = text;
+    copied.toggleAttribute("data-show", true);
+    clearTimeout(copiedTimer);
+    copiedTimer = window.setTimeout(() => {
+      copied.removeAttribute("data-show");
+      copied.textContent = "";
+    }, 1600);
+  };
+  /* The GIF on screen; during a dev review, the suggestion being previewed. */
+  const onScreen = () => {
+    const slide = track?.children[current()] as HTMLElement | undefined;
+    const gif = slide?.querySelector<HTMLElement>("[data-gif]");
+    if (!slide || !gif) return null;
+    return { id: slide.dataset.candidate ?? gif.dataset.gif!, alt: gif.querySelector("img")?.alt ?? "" };
+  };
+  const copyLink = pack?.querySelector<HTMLButtonElement>("[data-copy-link]");
+  copyLink?.addEventListener("click", async () => {
+    const gif = onScreen();
+    if (!gif) return;
+    try {
+      await navigator.clipboard.writeText(`https://giphy.com/gifs/${gif.id}`);
+    } catch {
+      return;
+    }
+    flash(copyLink.dataset.done!);
+  });
+  const copyGif = pack?.querySelector<HTMLButtonElement>("[data-copy-gif]");
+  copyGif?.addEventListener("click", async () => {
+    const gif = onScreen();
+    if (!gif) return;
+    const base = `https://media.giphy.com/media/${gif.id}`;
     /*
      * Browsers only put still images on the clipboard, so the GIF goes on as HTML (rich editors
      * paste it animated) plus a PNG of its first frame for apps that only take pictures.
@@ -556,20 +606,13 @@ const place = (e: (typeof site.experience)[number], i: number) =>
         canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("No frame"))), "image/png"),
       );
     })();
-    const alt = gif.querySelector("img")?.alt ?? "";
-    const html = new Blob([`<img src="${base}/giphy.gif" alt="${alt}">`], { type: "text/html" });
+    const html = new Blob([`<img src="${base}/giphy.gif" alt="${gif.alt}">`], { type: "text/html" });
     try {
       await navigator.clipboard.write([new ClipboardItem({ "image/png": frame, "text/html": html })]);
     } catch {
       return;
     }
-    copied.textContent = copied.dataset.text!;
-    copied.toggleAttribute("data-show", true);
-    clearTimeout(copiedTimer);
-    copiedTimer = window.setTimeout(() => {
-      copied.removeAttribute("data-show");
-      copied.textContent = "";
-    }, 1600);
+    flash(copyGif.dataset.done!);
   });
 
   /*
@@ -589,7 +632,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
   };
   const resetSuggestion = () => {
     for (const slide of track?.querySelectorAll<HTMLElement>("[data-candidate]") ?? []) {
-      showGif(slide, slide.querySelector<HTMLElement>("[data-copy]")!.dataset.copy!);
+      showGif(slide, slide.querySelector<HTMLElement>("[data-gif]")!.dataset.gif!);
       delete slide.dataset.candidate;
       delete slide.dataset.skip;
     }
@@ -841,18 +884,83 @@ const place = (e: (typeof site.experience)[number], i: number) =>
   .pack-open-row {
     margin-top: var(--space-4);
   }
+  /* Today's four pets huddle at the start of the pill and scatter a little on hover. */
   .pack-open {
-    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-4) var(--space-1) var(--space-1);
+    border: 1px dashed color-mix(in oklab, var(--fg) 25%, transparent);
+    border-radius: var(--radius-pill);
+    color: var(--fg);
     font-size: var(--text-caption);
+    font-weight: var(--weight-medium);
     line-height: var(--leading-text);
-    text-decoration: underline;
-    text-decoration-color: var(--rule);
-    text-underline-offset: var(--underline-offset);
     cursor: pointer;
   }
   .pack-open:hover {
-    color: var(--fg);
-    text-decoration-color: var(--fg);
+    border-style: solid;
+    background: color-mix(in oklab, var(--fg) 6%, transparent);
+  }
+  .pack-open:active {
+    scale: 0.97;
+  }
+  .family {
+    display: flex;
+  }
+  .pet {
+    width: var(--space-6);
+    height: var(--space-6);
+    overflow: hidden;
+    border: 2px solid var(--bg);
+    border-radius: 50%;
+    background: var(--rule);
+  }
+  .face {
+    width: 100%;
+    height: 100%;
+    background: var(--face) center / cover no-repeat;
+  }
+  .pet + .pet {
+    margin-left: calc(var(--space-3) * -1);
+  }
+  .pack-open:hover .pet + .pet {
+    margin-left: calc(var(--space-1) * -1);
+  }
+  .pack-open:hover .pet:nth-child(odd) {
+    rotate: -8deg;
+  }
+  .pack-open:hover .pet:nth-child(even) {
+    rotate: 8deg;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pack-open {
+      transition:
+        background-color var(--duration) var(--ease),
+        scale 150ms var(--ease);
+    }
+    .pet {
+      transition:
+        margin var(--duration) var(--ease),
+        rotate var(--duration) var(--ease);
+    }
+    .pack-open:hover .pet {
+      animation: hop 500ms var(--ease) both;
+    }
+    .pack-open:hover .pet:nth-child(2) {
+      animation-delay: 60ms;
+    }
+    .pack-open:hover .pet:nth-child(3) {
+      animation-delay: 120ms;
+    }
+    .pack-open:hover .pet:nth-child(4) {
+      animation-delay: 180ms;
+    }
+  }
+  @keyframes hop {
+    40% {
+      translate: 0 -3px;
+    }
   }
   .pack-open:focus-visible {
     outline: var(--focus-ring);
@@ -947,12 +1055,12 @@ const place = (e: (typeof site.experience)[number], i: number) =>
   .pack-stage {
     position: relative;
   }
-  /* The whole GIF is the copy button; letterboxed so every shape fits the same frame. */
+  /* Letterboxed so every shape fits the same frame. */
   .pack-gif {
     display: block;
     width: 100%;
     aspect-ratio: 4 / 3;
-    max-height: 45dvh;
+    max-height: 38dvh;
     overflow: hidden;
     border-radius: var(--radius-md);
     background: color-mix(in oklab, var(--rule) 50%, var(--bg));
@@ -966,43 +1074,42 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     height: 100%;
     object-fit: contain;
   }
-  /* A centred hint on hover or keyboard focus; it steps aside while "Copied" shows. */
-  .pack-gif {
+  .pack-viewport {
     position: relative;
   }
-  .pack-gif::after {
-    content: attr(data-hint);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    padding: var(--space-1) var(--space-3);
+  .pack-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .pack-actions button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--space-10);
+    padding: var(--space-2) var(--space-3);
+    border: var(--hairline);
     border-radius: var(--radius-pill);
-    background: rgb(0 0 0 / 0.65);
-    color: #fff;
+    color: var(--fg);
     font-size: var(--text-caption);
     line-height: var(--leading-text);
-    white-space: nowrap;
-    translate: -50% -50%;
-    opacity: 0;
-    pointer-events: none;
+    cursor: pointer;
   }
-  @media (hover: hover) {
-    .pack-gif:hover::after {
-      opacity: 1;
-    }
+  .pack-actions button:hover {
+    background: color-mix(in oklab, var(--rule) 45%, transparent);
   }
-  .pack-gif:focus-visible::after {
-    opacity: 1;
-  }
-  .pack:has(.pack-copied[data-show]) .pack-gif::after {
-    opacity: 0;
-  }
-  .pack-gif:focus-visible {
+  .pack-actions button:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-offset);
   }
-  .pack-viewport {
-    position: relative;
+  .pack-actions path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .pack-copied {
     position: absolute;
@@ -1098,9 +1205,11 @@ const place = (e: (typeof site.experience)[number], i: number) =>
       animation-play-state: paused;
     }
     .pack-copied,
-    .pack-caption,
-    .pack-gif::after {
+    .pack-caption {
       transition: opacity var(--duration) var(--ease);
+    }
+    .pack-actions button {
+      transition: background-color var(--duration) var(--ease);
     }
   }
   @keyframes story {
