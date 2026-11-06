@@ -1239,10 +1239,13 @@ const careerStops = site.experience
   .grid span + span {
     border-left: 1px dashed var(--rule);
   }
-  /* One stacking context for the plot, so every node sits above every slice of the line. */
+  /* One stacking context for the plot, so every node sits above every slice of the line,
+     and its cards above the replay button. Only the lanes' hit areas take the pointer. */
   .lanes {
     position: relative;
+    z-index: 4;
     isolation: isolate;
+    pointer-events: none;
     height: var(--plot);
     margin-top: 0;
   }
