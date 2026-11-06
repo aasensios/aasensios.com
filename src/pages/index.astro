@@ -27,6 +27,8 @@ const CURVE = 2.5;
  * that isn't rendered, so only today's meme in the current theme is downloaded.
  */
 const themes = ["light", "dark"] as const;
+/* The GIF review tools only exist on the dev server, never in the built site. */
+const review = import.meta.env.DEV;
 const gifVars = (day: DayGif) =>
   [
     `--still-light:url(${gifStill(day.light)})`,
@@ -334,7 +336,19 @@ const careerStops = site.experience
               {[1, 2, 3, 4, 5, 6, 0].flatMap((d) =>
                 site.links.flatMap((l) =>
                   themes.map((theme) => (
-                    <figure class={`pack-item pack-day-${d}`}>
+                    <figure
+                      class={`pack-item pack-day-${d}`}
+                      data-key={`${copy.pack.days[d]} · ${copy.pack.themes[theme]} · ${l.tag}`}
+                    >
+                      {review && (
+                        <button
+                          type="button"
+                          class="pack-mark"
+                          aria-pressed="false"
+                          aria-label={`${copy.pack.days[d]} · ${copy.pack.themes[theme]} · ${l.tag}`}
+                          data-mark
+                        />
+                      )}
                       <picture>
                         <source
                           media="(prefers-reduced-motion: no-preference)"
@@ -356,6 +370,29 @@ const careerStops = site.experience
                 ),
               )}
             </template>
+            {
+              review && (
+                <footer class="pack-review" data-pack-review>
+                  <span>
+                    {copy.pack.review.hint} <strong data-count>0</strong> {copy.pack.review.marked}
+                  </span>
+                  <span class="pack-review-actions">
+                    <button type="button" data-review-clear>
+                      {copy.pack.review.clear}
+                    </button>
+                    <button
+                      type="button"
+                      class="pack-review-copy"
+                      data-review-copy
+                      data-copied={copy.pack.review.copied}
+                      data-request={copy.pack.review.request}
+                    >
+                      {copy.pack.review.copy}
+                    </button>
+                  </span>
+                </footer>
+              )
+            }
           </dialog>
         </section>
       </main>
@@ -469,6 +506,51 @@ const careerStops = site.experience
   pack?.addEventListener("click", (event) => {
     if (event.target === pack) pack.close();
   });
+
+  const reviewBar = pack?.querySelector<HTMLElement>("[data-pack-review]");
+  if (pack && reviewBar) {
+    const KEY = "pack-marks";
+    const load = (): string[] => {
+      try {
+        return JSON.parse(localStorage.getItem(KEY) ?? "[]");
+      } catch {
+        return [];
+      }
+    };
+    let marks = new Set(load());
+    const sync = () => {
+      for (const item of pack.querySelectorAll<HTMLElement>(".pack-item")) {
+        const on = marks.has(item.dataset.key!);
+        item.toggleAttribute("data-marked", on);
+        item.querySelector("[data-mark]")?.setAttribute("aria-pressed", String(on));
+      }
+      reviewBar.querySelector("[data-count]")!.textContent = String(marks.size);
+      try {
+        localStorage.setItem(KEY, JSON.stringify([...marks]));
+      } catch {}
+    };
+    document.querySelector("[data-pack-open]")?.addEventListener("click", sync);
+    pack.addEventListener("click", (event) => {
+      const mark = (event.target as Element).closest<HTMLElement>("[data-mark]");
+      if (!mark) return;
+      const key = mark.closest<HTMLElement>(".pack-item")!.dataset.key!;
+      if (!marks.delete(key)) marks.add(key);
+      sync();
+    });
+    reviewBar.querySelector("[data-review-clear]")?.addEventListener("click", () => {
+      marks = new Set();
+      sync();
+    });
+    const copyButton = reviewBar.querySelector<HTMLButtonElement>("[data-review-copy]")!;
+    const label = copyButton.textContent;
+    copyButton.addEventListener("click", async () => {
+      const order = [...pack.querySelectorAll<HTMLElement>(".pack-item")].map((i) => i.dataset.key!);
+      const lines = order.filter((key) => marks.has(key)).map((key) => `* ${key}`);
+      await navigator.clipboard.writeText([copyButton.dataset.request, ...lines].join("\n"));
+      copyButton.textContent = copyButton.dataset.copied!;
+      setTimeout(() => (copyButton.textContent = label), 1500);
+    });
+  }
 
   const portrait = document.querySelector<HTMLDialogElement>("[data-avatar-dialog]");
   document.querySelector("[data-avatar-open]")?.addEventListener("click", () => portrait?.showModal());
@@ -766,6 +848,65 @@ const careerStops = site.experience
     color: var(--muted);
     font-size: var(--text-micro);
     line-height: var(--leading-text);
+  }
+  .pack-item {
+    position: relative;
+  }
+  .pack-mark {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 1;
+    height: calc(100% - var(--space-6));
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+  .pack-mark:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  .pack-item[data-marked] img {
+    outline: 3px solid #e5484d;
+    outline-offset: -3px;
+    opacity: 0.55;
+  }
+  .pack-item[data-marked] figcaption {
+    color: #e5484d;
+    text-decoration: line-through;
+  }
+  .pack-review {
+    position: sticky;
+    bottom: calc(var(--space-6) * -1);
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin: var(--space-3) calc(var(--space-6) * -1) calc(var(--space-6) * -1);
+    padding: var(--space-3) var(--space-6);
+    border-top: var(--hairline);
+    background: var(--bg);
+    color: var(--muted);
+    font-size: var(--text-caption);
+  }
+  .pack-review strong {
+    color: var(--fg);
+  }
+  .pack-review-actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .pack-review button {
+    padding: var(--space-1) var(--space-3);
+    border: var(--hairline);
+    border-radius: var(--radius-pill);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .pack-review .pack-review-copy {
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
   }
   .pack-today {
     display: none;

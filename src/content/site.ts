@@ -151,6 +151,14 @@ export const site = {
       today: "Today",
       themes: { light: "Day", dark: "Night" },
       days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      review: {
+        hint: "Dev only: click GIFs to mark them for replacement.",
+        marked: "marked",
+        copy: "Copy request",
+        copied: "Copied",
+        clear: "Clear",
+        request: "Replace these GIFs:",
+      },
     },
     chart: {
       replay: "Replay chart animation",
