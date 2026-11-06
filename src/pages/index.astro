@@ -599,6 +599,8 @@ const careerStops = site.experience
     --popover: 240px;
     --preview: 320px;
     --gif: 200px;
+    --cta-shot: 64px;
+    --cta-cut: 16px;
 
     /* Motion */
     --duration: 150ms;
@@ -1567,7 +1569,7 @@ const careerStops = site.experience
     align-items: center;
     gap: var(--space-2);
     height: var(--space-12);
-    padding: 0 var(--space-5) 0 var(--space-2);
+    padding: 0 var(--space-5) 0 calc(var(--cta-shot) + var(--space-2));
     border: var(--hairline);
     border-radius: var(--radius-pill);
     background: var(--bg);
@@ -1581,13 +1583,9 @@ const careerStops = site.experience
   }
   .cta:hover {
     border-color: var(--fg);
-    translate: 0 -2px;
-    box-shadow: 0 6px 0 -2px light-dark(rgb(35 31 23 / 0.15), rgb(0 0 0 / 0.5));
   }
   .cta:active {
-    translate: 0 0;
     scale: 0.97;
-    box-shadow: none;
   }
   .page .cta:focus-visible {
     outline-offset: var(--focus-offset);
@@ -1615,14 +1613,18 @@ const careerStops = site.experience
   :global(:root:not([data-day])) .day-1 {
     display: block;
   }
-  .cta-gif .shot {
-    width: var(--space-8);
-    height: var(--space-8);
-    border-radius: 50%;
-    box-shadow: 0 0 0 2px var(--bg);
+  /* Fills the pill's leading end up to the label, cut on a diagonal. */
+  .cta-gif {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--cta-shot);
+    overflow: hidden;
+    border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+    clip-path: polygon(0 0, 100% 0, calc(100% - var(--cta-cut)) 100%, 0 100%);
   }
-  .cta:first-child .cta-gif .shot {
-    box-shadow: 0 0 0 2px var(--fg);
+  .cta-gif .shot {
+    width: 100%;
+    height: 100%;
   }
   .cta-card {
     position: absolute;
@@ -1667,9 +1669,7 @@ const careerStops = site.experience
     }
     .cta {
       transition:
-        translate var(--duration) var(--ease),
         scale var(--duration) var(--ease),
-        box-shadow var(--duration) var(--ease),
         border-color var(--duration) var(--ease);
     }
     .cta-card {
