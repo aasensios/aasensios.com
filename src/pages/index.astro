@@ -1,5 +1,5 @@
 ---
-import { getImage, Image } from "astro:assets";
+import { Image } from "astro:assets";
 import type { SvgComponent } from "astro/types";
 import Moon from "../assets/icons/moon.svg";
 import Sun from "../assets/icons/sun.svg";
@@ -26,14 +26,9 @@ const shots = import.meta.glob<ImageMetadata>("../assets/previews/*.jpeg", {
   import: "default",
 });
 const previews = new Map(
-  await Promise.all(
-    Object.entries(shots).map(async ([path, src]) => {
-      const { src: url } = await getImage({ src, width: 640, format: "webp", quality: 75 });
-      return [path.split("/").at(-1)!.replace(".jpeg", ""), url] as const;
-    }),
-  ),
+  Object.entries(shots).map(([path, src]) => [path.split("/").at(-1)!.replace(".jpeg", ""), src]),
 );
-const preview = (url: string) => previews.get(previewName(url));
+const preview = (url: string) => (previews.has(previewName(url)) ? previewName(url) : undefined);
 /*
  * Memes are CSS backgrounds, not <img>s: browsers never fetch a background for an element
  * that isn't rendered, so only today's meme in the current theme is downloaded.
@@ -334,7 +329,23 @@ const place = (e: (typeof site.experience)[number], i: number) =>
       </main>
 
       <div class="site-preview" aria-hidden="true" data-preview-card>
-        <span class="site-preview-shot"></span>
+        <span class="site-preview-shot">
+          {
+            [...previews].map(([name, src]) => (
+              <Image
+                src={src}
+                alt=""
+                width={320}
+                densities={[1, 2]}
+                format="webp"
+                quality={75}
+                loading="lazy"
+                decoding="async"
+                data-shot={name}
+              />
+            ))
+          }
+        </span>
         <span class="site-preview-host"></span>
       </div>
 
@@ -359,25 +370,26 @@ const place = (e: (typeof site.experience)[number], i: number) =>
   import { previewHost } from "../lib/preview";
 
   const card = document.querySelector<HTMLElement>("[data-preview-card]");
-  /* The image is made here, not in the markup, so the page never ships an <img> without a src. */
-  const shot = new Image();
-  shot.alt = "";
-  shot.decoding = "async";
-  card?.querySelector(".site-preview-shot")?.append(shot);
   const host = card?.querySelector<HTMLElement>(".site-preview-host");
-  if (card && shot && host && matchMedia("(hover: hover)").matches) {
+  if (card && host && matchMedia("(hover: hover)").matches) {
     const GAP = 12;
     const EDGE = 8;
-    shot.addEventListener("load", () => card.toggleAttribute("data-loaded", true));
-    shot.addEventListener("error", () => card.toggleAttribute("data-failed", true));
+    /* Every screenshot is a lazy <img> kept out of layout, so only the ones shown get fetched. */
+    const shots = new Map(
+      [...card.querySelectorAll<HTMLImageElement>("img[data-shot]")].map((img) => [img.dataset.shot, img]),
+    );
     const hide = () => card.removeAttribute("data-show");
     for (const link of document.querySelectorAll<HTMLAnchorElement>("a[data-preview]")) {
       link.addEventListener("pointerenter", () => {
-        const src = link.dataset.preview!;
-        if (shot.getAttribute("src") !== src) {
-          card.removeAttribute("data-loaded");
-          card.removeAttribute("data-failed");
-          shot.src = src;
+        const shot = shots.get(link.dataset.preview);
+        if (!shot) return;
+        for (const img of shots.values()) img.toggleAttribute("data-active", img === shot);
+        const loaded = shot.complete && shot.naturalWidth > 0;
+        card.toggleAttribute("data-loaded", loaded);
+        card.removeAttribute("data-failed");
+        if (!loaded) {
+          shot.addEventListener("load", () => card.toggleAttribute("data-loaded", shot.hasAttribute("data-active")), { once: true });
+          shot.addEventListener("error", () => card.toggleAttribute("data-failed", shot.hasAttribute("data-active")), { once: true });
         }
         host.textContent = previewHost(link.href);
         const box = link.getBoundingClientRect();
@@ -1354,11 +1366,15 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     background: var(--rule);
   }
   .site-preview-shot :global(img) {
+    display: none;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: top;
     opacity: 0;
+  }
+  .site-preview-shot :global(img[data-active]) {
+    display: block;
   }
   .site-preview[data-loaded] :global(img) {
     opacity: 1;
