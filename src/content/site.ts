@@ -150,6 +150,8 @@ export const site = {
       close: "Close",
       prev: "Previous GIF",
       next: "Next GIF",
+      pause: "Pause",
+      play: "Play",
       copyLink: "Copy Giphy URL",
       copyGif: "Copy GIF",
       copiedLink: "Copied Giphy URL",

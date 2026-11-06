@@ -270,10 +270,6 @@ const place = (e: (typeof site.experience)[number], i: number) =>
             </div>
             <div class="pack-viewport">
               <div class="pack-track" data-pack-track></div>
-              <span class="pack-copied" role="status" data-pack-copied />
-            </div>
-            <div class="pack-foot">
-              <p class="pack-caption" data-pack-caption></p>
               <nav class="pack-nav">
                 <button type="button" aria-label={copy.pack.prev} data-pack-prev>
                   <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
@@ -286,6 +282,25 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                   </svg>
                 </button>
               </nav>
+              <span class="pack-copied" role="status" data-pack-copied />
+            </div>
+            <div class="pack-foot">
+              <p class="pack-caption" data-pack-caption></p>
+              <button
+                type="button"
+                class="pack-play"
+                aria-label={copy.pack.pause}
+                data-pack-play
+                data-pause={copy.pack.pause}
+                data-play={copy.pack.play}
+              >
+                <svg class="icon-pause" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path d="M5.5 3.5v9M10.5 3.5v9" />
+                </svg>
+                <svg class="icon-play" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path d="M5 3.5v9l7-4.5z" />
+                </svg>
+              </button>
             </div>
             <div class="pack-actions">
               <button type="button" data-copy-gif data-done={copy.pack.copiedGif}>
@@ -528,13 +543,28 @@ const place = (e: (typeof site.experience)[number], i: number) =>
    * With a mouse, hovering holds the bar; with a keyboard, focus does. Touch screens keep
    * :hover and focus after a tap, so there only a finger resting on the GIF holds it.
    */
-  const holders = [track, pack?.querySelector<HTMLElement>(".pack-actions")];
+  const holders = [
+    pack?.querySelector<HTMLElement>(".pack-viewport"),
+    pack?.querySelector<HTMLElement>(".pack-actions"),
+  ];
+  /* The pause button stops the advance until it's pressed again or the gallery closes. */
+  const play = pack?.querySelector<HTMLButtonElement>("[data-pack-play]");
+  let stopped = false;
+  const setStopped = (on: boolean) => {
+    stopped = on;
+    play?.setAttribute("aria-pressed", String(on));
+    play?.setAttribute("aria-label", on ? play.dataset.play! : play.dataset.pause!);
+    hold();
+  };
+  play?.addEventListener("click", () => setStopped(!stopped));
+  pack?.addEventListener("close", () => setStopped(false));
   const mouse = matchMedia("(hover: hover)");
   let pressing = false;
   const hold = () =>
     pack?.toggleAttribute(
       "data-paused",
-      pressing ||
+      stopped ||
+        pressing ||
         holders.some(
           (el) => (mouse.matches && el?.matches(":hover")) || el?.querySelector(":focus-visible"),
         ) ||
@@ -1199,22 +1229,64 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     outline: var(--focus-ring);
     outline-offset: var(--focus-offset);
   }
+  /* Previous and next ride on the GIF's edges, like most carousels; only the buttons take taps. */
   .pack-nav {
+    position: absolute;
+    inset: 0 var(--space-2);
+    z-index: 1;
     display: flex;
-    flex: none;
-    gap: var(--space-2);
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
   }
-  .pack-nav > button {
+  .pack-nav > button,
+  .pack-play {
     display: grid;
     place-items: center;
     width: var(--space-8);
     height: var(--space-8);
-    border: var(--hairline);
     border-radius: 50%;
-    color: var(--fg);
     cursor: pointer;
   }
-  .pack-nav path {
+  .pack-nav > button {
+    background: rgb(0 0 0 / 0.45);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    pointer-events: auto;
+  }
+  .pack-nav > button:hover {
+    background: rgb(0 0 0 / 0.65);
+  }
+  .pack-play {
+    flex: none;
+    border: var(--hairline);
+    color: var(--fg);
+  }
+  .pack-play:hover {
+    background: color-mix(in oklab, var(--rule) 45%, transparent);
+  }
+  .pack-play .icon-play,
+  .pack-play[aria-pressed="true"] .icon-pause {
+    display: none;
+  }
+  .pack-play[aria-pressed="true"] .icon-play {
+    display: block;
+  }
+  .pack-play .icon-play path {
+    fill: currentColor;
+  }
+  .pack-play:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  /* Without motion there's no autoplay, so nothing to pause. */
+  @media (prefers-reduced-motion: reduce) {
+    .pack-play {
+      display: none;
+    }
+  }
+  .pack-nav path,
+  .pack-play path {
     fill: none;
     stroke: currentColor;
     stroke-width: 1.5;
