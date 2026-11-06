@@ -21,6 +21,9 @@ export type Project = {
 
 export type Link = { label: string; href: string };
 
+/** `emoji` leads the button; `motion` names how it plays on hover. */
+export type ContactLink = Link & { emoji: string; motion: "wave" | "peek" };
+
 export const site = {
   name: "Alejandro Asensio",
   role: "Frontend-focused product engineer",
@@ -94,9 +97,19 @@ export const site = {
   ] satisfies Project[],
 
   links: [
-    { label: "Say hi on LinkedIn", href: "https://www.linkedin.com/in/aasensios/" },
-    { label: "See my work on GitHub", href: "https://github.com/aasensios" },
-  ] satisfies Link[],
+    {
+      label: "Say hi on LinkedIn",
+      href: "https://www.linkedin.com/in/aasensios/",
+      emoji: "👋",
+      motion: "wave",
+    },
+    {
+      label: "See my work on GitHub",
+      href: "https://github.com/aasensios",
+      emoji: "👀",
+      motion: "peek",
+    },
+  ] satisfies ContactLink[],
 
   copy: {
     headline: "I make screens you can leave.",

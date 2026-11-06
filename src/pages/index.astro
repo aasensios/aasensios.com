@@ -226,13 +226,13 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
           <h2>{copy.sections.links}</h2>
           <p class="links">
             {
-              site.links.map((l, i) => (
-                <>
-                  {i > 0 && <span aria-hidden="true">/</span>}
-                  <a href={l.href} target="_blank" rel="noopener">
-                    {l.label}
-                  </a>
-                </>
+              site.links.map((l) => (
+                <a class={`cta ${l.motion}`} href={l.href} target="_blank" rel="noopener">
+                  <span class="cta-emoji" aria-hidden="true">
+                    {l.emoji}
+                  </span>
+                  {l.label}
+                </a>
               ))
             }
           </p>
@@ -334,6 +334,7 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
     --leading-text: 1.6;
     --leading-heading: 1.2;
     --weight-regular: 400;
+    --weight-medium: 500;
     --weight-bold: 700;
     --opsz-regular: 14;
     --opsz-bold: 25;
@@ -368,6 +369,7 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
     --radius-md: 8px;
     --radius-lg: 10px;
     --radius-xl: 16px;
+    --radius-pill: 999px;
 
     /* Sizes */
     --measure: 640px;
@@ -959,7 +961,6 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
   }
   .title a,
   a.row .title,
-  .links a,
   footer a {
     text-decoration: underline;
     text-underline-offset: var(--underline-offset);
@@ -968,7 +969,6 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
   }
   .title a:hover,
   a.row:hover .title,
-  .links a:hover,
   footer a:hover {
     text-decoration-color: var(--fg);
     text-decoration-thickness: var(--underline-hover);
@@ -976,7 +976,6 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
   @media (prefers-reduced-motion: no-preference) {
     .title a,
     a.row .title,
-    .links a,
     footer a {
       transition:
         text-decoration-thickness var(--duration) var(--ease),
@@ -986,11 +985,97 @@ const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
   .links {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
-    color: var(--fg);
+    gap: var(--space-3);
   }
-  .links span {
-    color: var(--muted);
+  /* Contact buttons: the one place on the page that asks for a click, so they get to play. */
+  .cta {
+    --tilt: -2deg;
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: var(--space-12);
+    padding: 0 var(--space-5) 0 var(--space-4);
+    border: var(--hairline);
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+    color: var(--fg);
+    font-weight: var(--weight-medium);
+  }
+  .cta:first-child {
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .cta + .cta {
+    --tilt: 2deg;
+  }
+  .cta:hover {
+    border-color: var(--fg);
+    translate: 0 -2px;
+    rotate: var(--tilt);
+    box-shadow: 0 6px 0 -2px light-dark(rgb(35 31 23 / 0.15), rgb(0 0 0 / 0.5));
+  }
+  .cta:active {
+    translate: 0 0;
+    scale: 0.97;
+    box-shadow: none;
+  }
+  .page .cta:focus-visible {
+    outline-offset: var(--focus-offset);
+  }
+  .cta-emoji {
+    display: inline-block;
+    font-size: 1.25em;
+    line-height: 1;
+  }
+  .wave .cta-emoji {
+    transform-origin: 70% 80%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .cta {
+      transition:
+        translate var(--duration) var(--ease),
+        rotate 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        scale var(--duration) var(--ease),
+        box-shadow var(--duration) var(--ease),
+        border-color var(--duration) var(--ease);
+    }
+    .wave:hover .cta-emoji {
+      animation: wave 900ms ease-in-out;
+    }
+    .peek:hover .cta-emoji {
+      animation: peek 900ms ease-in-out;
+    }
+  }
+  @keyframes wave {
+    0%,
+    100% {
+      rotate: 0deg;
+    }
+    15%,
+    45% {
+      rotate: 18deg;
+    }
+    30%,
+    60% {
+      rotate: -10deg;
+    }
+    75% {
+      rotate: 6deg;
+    }
+  }
+  @keyframes peek {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    25% {
+      translate: -3px 0;
+    }
+    60% {
+      translate: 3px -1px;
+    }
   }
 
   @media (max-width: 480px) {
