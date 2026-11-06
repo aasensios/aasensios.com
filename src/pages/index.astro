@@ -121,35 +121,14 @@ const careerStops = site.experience
             style={`--years:${axis.length};--lane:${LANE}px;--origin:${origin.toFixed(3)}%`}
             data-chart
           >
-            <div class="chart-tools">
-              <span class="chart-tool">
-                <button
-                  type="button"
-                  aria-label={copy.chart.pause}
-                  aria-pressed="false"
-                  data-chart-pause
-                >
-                  <svg class="icon-pause" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                    <path d="M5.5 3.5v9M10.5 3.5v9" />
-                  </svg>
-                  <svg class="icon-play" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                    <path class="filled" d="M5 3.5v9l7.5-4.5z" />
-                  </svg>
-                </button>
-                <span class="tool-tip" aria-hidden="true">
-                  <span class="when-running">{copy.chart.tips.pause}</span>
-                  <span class="when-paused">{copy.chart.tips.play}</span>
-                </span>
-              </span>
-              <span class="chart-tool">
-                <button type="button" aria-label={copy.chart.replay} data-chart-replay>
-                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                    <path d="M3.5 8a4.5 4.5 0 1 0 1.32-3.18M4.5 2.5v2.5H7" />
-                  </svg>
-                </button>
-                <span class="tool-tip" aria-hidden="true">{copy.chart.tips.replay}</span>
-              </span>
-            </div>
+            <span class="chart-tool">
+              <button type="button" aria-label={copy.chart.replay} data-chart-replay>
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path d="M3.5 8a4.5 4.5 0 1 0 1.32-3.18M4.5 2.5v2.5H7" />
+                </svg>
+              </button>
+              <span class="tool-tip" aria-hidden="true">{copy.chart.replayTip}</span>
+            </span>
             <div class="grid" aria-hidden="true">
               {axis.map(() => (
                 <span />
@@ -395,9 +374,8 @@ const careerStops = site.experience
     addEventListener("scroll", hide, { passive: true });
   }
 
-  /* The line draws itself once the chart is on screen, and the button pauses it and the pulse. */
+  /* The line draws itself once the chart is on screen; once it's done, it can be replayed. */
   const chart = document.querySelector<HTMLElement>("[data-chart]");
-  const pause = chart?.querySelector<HTMLButtonElement>("[data-chart-pause]");
   if (chart) {
     new IntersectionObserver(
       (entries, observer) => {
@@ -408,14 +386,16 @@ const careerStops = site.experience
       { threshold: 0.4 },
     ).observe(chart);
   }
-  pause?.addEventListener("click", () => {
-    const paused = chart!.toggleAttribute("data-paused");
-    pause.setAttribute("aria-pressed", String(paused));
+  /* Today's marker pops in last, so its pop ending means the drawing is done. */
+  chart?.addEventListener("animationend", (event) => {
+    const target = event.target as Element;
+    if (event.animationName === "pop" && target.classList.contains("now")) {
+      chart.toggleAttribute("data-done", true);
+    }
   });
   /* Replay drops every animation for one frame of style, then lets them all start over. */
   chart?.querySelector("[data-chart-replay]")?.addEventListener("click", () => {
-    chart.removeAttribute("data-paused");
-    pause?.setAttribute("aria-pressed", "false");
+    chart.removeAttribute("data-done");
     chart.toggleAttribute("data-replay", true);
     chart.getBoundingClientRect();
     chart.removeAttribute("data-replay");
@@ -868,16 +848,18 @@ const careerStops = site.experience
   .card-meta {
     color: var(--muted);
   }
-  .chart-tools {
+  /* The replay button waits in the corner until the drawing has finished. */
+  .chart-tool {
     position: absolute;
     top: var(--space-2);
     left: var(--space-2);
     z-index: 3;
-    display: flex;
-    gap: var(--space-1);
+    visibility: hidden;
+    opacity: 0;
   }
-  .chart-tool {
-    position: relative;
+  .chart[data-done] .chart-tool {
+    visibility: visible;
+    opacity: 1;
   }
   .chart-tool button {
     display: grid;
@@ -902,15 +884,6 @@ const careerStops = site.experience
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
-  }
-  .chart-tool path.filled {
-    fill: currentColor;
-  }
-  [aria-pressed="true"] .icon-pause,
-  [aria-pressed="false"] .icon-play,
-  .chart[data-paused] .when-running,
-  .chart:not([data-paused]) .when-paused {
-    display: none;
   }
   /* Same look as the theme toggle's tip; shown for a real pointer or keyboard focus. */
   .tool-tip {
@@ -964,6 +937,14 @@ const careerStops = site.experience
     .lane:is(:hover, [data-open]) .card {
       transition: opacity var(--duration) var(--ease);
     }
+    .chart-tool {
+      transition:
+        opacity 300ms var(--ease),
+        visibility 0s 300ms;
+    }
+    .chart[data-done] .chart-tool {
+      transition: opacity 300ms var(--ease);
+    }
     .tool-tip {
       transition:
         opacity var(--duration) var(--ease),
@@ -1010,8 +991,7 @@ const careerStops = site.experience
       animation: glow var(--breath) ease-in-out var(--draw) infinite alternate both;
     }
     /* Hold everything at the start until the chart scrolls into view; without JS it just runs. */
-    :global(:root[data-js]) .chart:not([data-seen]) :is(.track, .glint, .stop, .stop-logo, .now, .now svg),
-    .chart[data-paused] :is(.track, .glint, .stop, .stop-logo, .now, .now svg) {
+    :global(:root[data-js]) .chart:not([data-seen]) :is(.track, .glint, .stop, .stop-logo, .now, .now svg) {
       animation-play-state: paused;
     }
     .chart[data-replay] :is(.track, .glint, .stop, .stop-logo, .now, .now svg) {
@@ -1019,7 +999,7 @@ const careerStops = site.experience
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .chart-tools,
+    .chart-tool,
     .glint {
       display: none;
     }
