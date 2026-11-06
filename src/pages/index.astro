@@ -154,7 +154,10 @@ const place = (e: (typeof site.experience)[number], i: number) =>
             </div>
             <div class="axis" aria-hidden="true">
               {axis.map((y) => (
-                <span style={`--left:${y.left + y.width / 2}%`}>{y.year}</span>
+                <span style={`--left:${y.left + y.width / 2}%`}>
+                  <span class="year-full">{y.year}</span>
+                  <span class="year-short">’{String(y.year).slice(2)}</span>
+                </span>
               ))}
             </div>
           </div>
@@ -521,17 +524,38 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     if (event.key === "ArrowRight") show(current() + 1);
   });
   /* Hovering, focusing or reviewing a GIF holds its bar, so there's time to look or copy. */
+  /*
+   * With a mouse, hovering holds the bar; with a keyboard, focus does. Touch screens keep
+   * :hover and focus after a tap, so there only a finger resting on the GIF holds it.
+   */
   const holders = [track, pack?.querySelector<HTMLElement>(".pack-actions")];
+  const mouse = matchMedia("(hover: hover)");
+  let pressing = false;
   const hold = () =>
     pack?.toggleAttribute(
       "data-paused",
-      holders.some((el) => el?.matches(":hover, :focus-within")) ||
+      pressing ||
+        holders.some(
+          (el) => (mouse.matches && el?.matches(":hover")) || el?.querySelector(":focus-visible"),
+        ) ||
         !!track?.querySelector("[data-candidate]"),
     );
   for (const el of holders) {
     for (const type of ["pointerenter", "pointerleave", "focusin", "focusout"]) {
       el?.addEventListener(type, () => requestAnimationFrame(hold));
     }
+  }
+  track?.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse") return;
+    pressing = true;
+    hold();
+  });
+  for (const type of ["pointerup", "pointercancel"]) {
+    addEventListener(type, () => {
+      if (!pressing) return;
+      pressing = false;
+      hold();
+    });
   }
   const openPack = (index: number) => {
     const items = pack?.querySelector<HTMLTemplateElement>("[data-pack-items]");
@@ -1090,6 +1114,7 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     margin-top: var(--space-3);
   }
   .pack-actions button {
+    white-space: nowrap;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1522,6 +1547,9 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     line-height: var(--leading-text);
     font-variant-numeric: tabular-nums;
   }
+  .year-short {
+    display: none;
+  }
   /* Each label sits in the middle of its year's share, partial years included. */
   .axis span {
     position: absolute;
@@ -1925,6 +1953,16 @@ const place = (e: (typeof site.experience)[number], i: number) =>
   }
 
   @media (max-width: 480px) {
+    /* Phones are too narrow for full years: the first, partial one would spill past its slice. */
+    .year-full {
+      display: none;
+    }
+    .year-short {
+      display: inline;
+    }
+    .pack-actions svg {
+      display: none;
+    }
     .row {
       flex-direction: column;
       gap: 0;
