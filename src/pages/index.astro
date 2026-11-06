@@ -26,6 +26,7 @@ const CURVE = 2.5;
  * Memes are CSS backgrounds, not <img>s: browsers never fetch a background for an element
  * that isn't rendered, so only today's meme in the current theme is downloaded.
  */
+const themes = ["light", "dark"] as const;
 const gifVars = (day: DayGif) =>
   [
     `--still-light:url(${gifStill(day.light)})`,
@@ -302,6 +303,65 @@ const careerStops = site.experience
               ))
             }
           </p>
+          <p class="pack-open-row">
+            <button type="button" class="pack-open" data-pack-open>
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <ellipse cx="8" cy="10.5" rx="3" ry="2.5" />
+                <circle cx="3.5" cy="7" r="1.25" />
+                <circle cx="6" cy="4.25" r="1.25" />
+                <circle cx="10" cy="4.25" r="1.25" />
+                <circle cx="12.5" cy="7" r="1.25" />
+              </svg>
+              {copy.pack.open}
+            </button>
+          </p>
+          <dialog class="pack" aria-labelledby="pack-title" data-pack>
+            <header class="pack-head">
+              <div>
+                <h2 id="pack-title" class="pack-title">{copy.pack.title}</h2>
+                <p class="pack-lede">{copy.pack.lede}</p>
+              </div>
+              <form method="dialog">
+                <button type="submit" class="dialog-close" aria-label={copy.pack.close}>
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path
+                      d="M4 4l8 8M12 4l-8 8"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </button>
+              </form>
+            </header>
+            <div class="pack-grid" data-pack-grid></div>
+            <template data-pack-items>
+              {[1, 2, 3, 4, 5, 6, 0].flatMap((d) =>
+                site.links.flatMap((l) =>
+                  themes.map((theme) => (
+                    <figure class={`pack-item pack-day-${d}`}>
+                      <picture>
+                        <source
+                          media="(prefers-reduced-motion: no-preference)"
+                          srcset={gifAnimated(l.gifs[d][theme])}
+                          type="image/webp"
+                        />
+                        <img
+                          src={gifStill(l.gifs[d][theme])}
+                          alt={`A ${theme === "light" ? "dog" : "cat"} ${l.meme}`}
+                          loading="lazy"
+                        />
+                      </picture>
+                      <figcaption>
+                        {copy.pack.days[d]} · {l.label}
+                        <span class="pack-today">{copy.pack.today}</span>
+                      </figcaption>
+                    </figure>
+                  )),
+                ),
+              )}
+            </template>
+          </dialog>
         </section>
       </main>
 
@@ -428,6 +488,17 @@ const careerStops = site.experience
       for (const lane of lanes) lane.toggleAttribute("data-open", lane === hit && !lane.hasAttribute("data-open"));
     });
   }
+
+  const pack = document.querySelector<HTMLDialogElement>("[data-pack]");
+  document.querySelector("[data-pack-open]")?.addEventListener("click", () => {
+    const grid = pack?.querySelector("[data-pack-grid]");
+    const items = pack?.querySelector<HTMLTemplateElement>("[data-pack-items]");
+    if (grid && items && !grid.childElementCount) grid.append(items.content.cloneNode(true));
+    pack?.showModal();
+  });
+  pack?.addEventListener("click", (event) => {
+    if (event.target === pack) pack.close();
+  });
 
   const portrait = document.querySelector<HTMLDialogElement>("[data-avatar-dialog]");
   document.querySelector("[data-avatar-open]")?.addEventListener("click", () => portrait?.showModal());
@@ -587,7 +658,8 @@ const careerStops = site.experience
     background: transparent;
     color: var(--fg);
   }
-  .portrait::backdrop {
+  .portrait::backdrop,
+  .pack::backdrop {
     background: rgb(0 0 0 / 0.6);
     backdrop-filter: blur(4px);
   }
@@ -615,6 +687,164 @@ const careerStops = site.experience
   .portrait-close:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-offset);
+  }
+  .pack-open-row {
+    margin-top: var(--space-4);
+  }
+  .pack-open {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: var(--text-caption);
+    line-height: var(--leading-text);
+    text-decoration: underline;
+    text-decoration-color: var(--rule);
+    text-underline-offset: var(--underline-offset);
+    cursor: pointer;
+  }
+  .pack-open:hover {
+    color: var(--fg);
+    text-decoration-color: var(--fg);
+  }
+  .pack-open:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  .pack-open svg {
+    fill: currentColor;
+  }
+  .pack {
+    width: min(880px, calc(100vw - var(--space-8)));
+    max-height: min(85dvh, 960px);
+    margin: auto;
+    padding: var(--space-6);
+    border: var(--hairline);
+    border-radius: var(--radius-xl);
+    corner-shape: squircle;
+    background: var(--bg);
+    color: var(--fg);
+    overscroll-behavior: contain;
+  }
+  .pack-head {
+    position: sticky;
+    top: calc(var(--space-6) * -1);
+    z-index: 1;
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin: calc(var(--space-6) * -1) calc(var(--space-6) * -1) 0;
+    padding: var(--space-6) var(--space-6) var(--space-4);
+    background: var(--bg);
+  }
+  .pack-title {
+    color: var(--fg);
+    font-family: var(--font-heading);
+    font-size: 1.728rem;
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-heading);
+  }
+  .pack-lede {
+    margin-top: var(--space-1);
+    color: var(--muted);
+    font-size: var(--text-caption);
+  }
+  .dialog-close {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: var(--space-8);
+    height: var(--space-8);
+    border: var(--hairline);
+    border-radius: 50%;
+    color: var(--fg);
+    cursor: pointer;
+  }
+  .dialog-close:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  /* Masonry: CSS grid lanes where supported, balanced columns everywhere else. */
+  .pack-grid {
+    columns: 3 180px;
+    column-gap: var(--space-3);
+  }
+  .pack-item {
+    margin: 0 0 var(--space-3);
+    break-inside: avoid;
+  }
+  @supports (display: grid-lanes) {
+    .pack-grid {
+      display: grid-lanes;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: var(--space-3);
+      columns: auto;
+    }
+    .pack-item {
+      margin: 0;
+    }
+  }
+  .pack-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: var(--space-16);
+    border-radius: var(--radius-md);
+    background: var(--rule);
+  }
+  .pack-item figcaption {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+    color: var(--muted);
+    font-size: var(--text-micro);
+    line-height: var(--leading-text);
+  }
+  .pack-today {
+    display: none;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--fg);
+    color: var(--bg);
+  }
+  :global(:root[data-day="0"]) .pack-day-0 .pack-today,
+  :global(:root[data-day="1"]) .pack-day-1 .pack-today,
+  :global(:root[data-day="2"]) .pack-day-2 .pack-today,
+  :global(:root[data-day="3"]) .pack-day-3 .pack-today,
+  :global(:root[data-day="4"]) .pack-day-4 .pack-today,
+  :global(:root[data-day="5"]) .pack-day-5 .pack-today,
+  :global(:root[data-day="6"]) .pack-day-6 .pack-today {
+    display: inline;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .pack,
+    .pack::backdrop {
+      transition:
+        opacity var(--duration) var(--ease),
+        translate 300ms var(--ease),
+        overlay var(--duration) allow-discrete,
+        display var(--duration) allow-discrete;
+      opacity: 0;
+    }
+    .pack {
+      translate: 0 var(--space-4);
+    }
+    .pack[open],
+    .pack[open]::backdrop {
+      opacity: 1;
+      translate: 0 0;
+    }
+    @starting-style {
+      .pack[open],
+      .pack[open]::backdrop {
+        opacity: 0;
+      }
+      .pack[open] {
+        translate: 0 var(--space-4);
+      }
+    }
   }
   @media (prefers-reduced-motion: no-preference) {
     .portrait,

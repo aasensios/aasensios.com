@@ -30,7 +30,8 @@ export type DayGif = { light: string; dark: string };
  */
 export type Week = [DayGif, DayGif, DayGif, DayGif, DayGif, DayGif, DayGif];
 
-export type ContactLink = Link & { gifs: Week };
+/** `meme` describes what the animals do, for the gallery's alt text. */
+export type ContactLink = Link & { meme: string; gifs: Week };
 
 export const site = {
   name: "Alejandro Asensio",
@@ -108,7 +109,7 @@ export const site = {
     {
       label: "Say hi on LinkedIn",
       href: "https://www.linkedin.com/in/aasensios/",
-      // Dogs and cats waving hello.
+      meme: "waving hello",
       gifs: [
         { light: "lv8qrl7TTuFj6QN3bM", dark: "ToMjGpRZ4gF6YuAT4li" },
         { light: "lsPxvZZHb7h1Y01oeA", dark: "125E8v90blHqtr4HrB" },
@@ -122,7 +123,7 @@ export const site = {
     {
       label: "See my work on GitHub",
       href: "https://github.com/aasensios",
-      // Dogs and cats hard at work on a computer.
+      meme: "at a computer",
       gifs: [
         { light: "SX71qs3TDxVkvbLJ4o", dark: "VbnUQpnihPSIgIXuZv" },
         { light: "kudIERso2pFiE", dark: "3oKIPnAiaMCws8nOsE" },
@@ -146,6 +147,14 @@ export const site = {
       `I've been shipping software for more than ${years} years now. Based in Barcelona, working fully remote.`,
     theme: { label: "Dark mode", toDark: "Switch to dark mode", toLight: "Switch to light mode" },
     avatar: { open: "View photo of Alejandro Asensio", close: "Close photo" },
+    pack: {
+      open: "Meet the whole pack",
+      title: "The whole pack",
+      lede: "A dog and a cat for each button, every day of the week. They change at your midnight.",
+      close: "Close",
+      today: "Today",
+      days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    },
     chart: {
       replay: "Replay chart animation",
       replayTip: "Replay",
