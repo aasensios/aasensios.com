@@ -21,8 +21,8 @@ export type Project = {
 
 export type Link = { label: string; href: string };
 
-/** `emoji` leads the button; `motion` names how it plays on hover. */
-export type ContactLink = Link & { emoji: string; motion: "wave" | "peek" };
+/** Giphy ids for the meme on each contact button, one per theme. */
+export type ContactLink = Link & { gif: { light: string; dark: string } };
 
 export const site = {
   name: "Alejandro Asensio",
@@ -100,14 +100,14 @@ export const site = {
     {
       label: "Say hi on LinkedIn",
       href: "https://www.linkedin.com/in/aasensios/",
-      emoji: "👋",
-      motion: "wave",
+      // Placeholder pick until the final pair is chosen: "Well hi!" cat / "Hi" cat on black.
+      gif: { light: "Y1Y1vtdiJGKeFNsSwe", dark: "t9JuXrkQGVeUaK7rbl" },
     },
     {
       label: "See my work on GitHub",
       href: "https://github.com/aasensios",
-      emoji: "👀",
-      motion: "peek",
+      // Cat in glasses at a computer / the classic typing cat.
+      gif: { light: "VbnUQpnihPSIgIXuZv", dark: "JIX9t2j0ZTN9S" },
     },
   ] satisfies ContactLink[],
 

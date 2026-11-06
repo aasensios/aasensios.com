@@ -7,6 +7,7 @@ import Layout from "@layouts/layout.astro";
 import avatar from "../assets/avatar.jpg";
 import { site } from "../content/site";
 import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
+import { gifAnimated, gifStill } from "../lib/gif";
 import { axisYears, barPosition, trackPath } from "../lib/timeline";
 
 const now = toYearMonth(new Date());
@@ -278,9 +279,27 @@ const careerStops = site.experience
           <p class="links">
             {
               site.links.map((l) => (
-                <a class={`cta ${l.motion}`} href={l.href} target="_blank" rel="noopener">
-                  <span class="cta-emoji" aria-hidden="true">
-                    {l.emoji}
+                <a class="cta" href={l.href} target="_blank" rel="noopener">
+                  <span class="cta-gif" aria-hidden="true">
+                    {(["light", "dark"] as const).map((theme) => (
+                      <span class={`${theme}-only`}>
+                        <img src={gifStill(l.gif[theme])} alt="" width="32" height="32" loading="lazy" />
+                      </span>
+                    ))}
+                  </span>
+                  <span class="cta-card" aria-hidden="true">
+                    {(["light", "dark"] as const).map((theme) => (
+                      <span class={`${theme}-only`}>
+                        <img
+                          src={gifStill(l.gif[theme])}
+                          data-animated={gifAnimated(l.gif[theme])}
+                          alt=""
+                          width="200"
+                          height="150"
+                          loading="lazy"
+                        />
+                      </span>
+                    ))}
                   </span>
                   {l.label}
                 </a>
@@ -314,6 +333,23 @@ const careerStops = site.experience
 
 <script>
   import { previewHost, previewImage } from "../lib/preview";
+
+  /*
+   * Contact buttons show a still frame of their meme; the card plays it on hover or focus.
+   * The animation is only fetched then, and never with reduced motion (the card keeps the still).
+   */
+  if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    for (const cta of document.querySelectorAll<HTMLElement>(".cta")) {
+      const play = () => {
+        for (const img of cta.querySelectorAll<HTMLImageElement>("img[data-animated]")) {
+          img.src = img.dataset.animated!;
+          img.removeAttribute("data-animated");
+        }
+      };
+      cta.addEventListener("pointerenter", play, { once: true });
+      cta.addEventListener("focus", play, { once: true });
+    }
+  }
 
   /*
    * Hovering a company shows a fresh screenshot of its website above the link. Touch screens
@@ -489,6 +525,7 @@ const careerStops = site.experience
     --icon: 56px;
     --popover: 240px;
     --preview: 320px;
+    --gif: 200px;
 
     /* Motion */
     --duration: 150ms;
@@ -1293,11 +1330,12 @@ const careerStops = site.experience
   .cta {
     --tilt: -2deg;
 
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     height: var(--space-12);
-    padding: 0 var(--space-5) 0 var(--space-4);
+    padding: 0 var(--space-5) 0 var(--space-2);
     border: var(--hairline);
     border-radius: var(--radius-pill);
     background: var(--bg);
@@ -1326,13 +1364,53 @@ const careerStops = site.experience
   .page .cta:focus-visible {
     outline-offset: var(--focus-offset);
   }
-  .cta-emoji {
-    display: inline-block;
-    font-size: 1.25em;
-    line-height: 1;
+  /* A still frame of the meme where an icon would go; the full GIF waits in the card. */
+  .cta-gif img {
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 2px var(--bg);
   }
-  .wave .cta-emoji {
-    transform-origin: 70% 80%;
+  .cta:first-child .cta-gif img {
+    box-shadow: 0 0 0 2px var(--fg);
+  }
+  .cta-card {
+    position: absolute;
+    bottom: calc(100% + var(--space-3));
+    left: 0;
+    z-index: 5;
+    padding: var(--space-1);
+    border: var(--hairline);
+    border-radius: var(--radius-lg);
+    corner-shape: squircle;
+    background: var(--bg);
+    box-shadow:
+      0 1px 2px light-dark(rgb(35 31 23 / 0.06), rgb(0 0 0 / 0.3)),
+      0 12px 32px -8px light-dark(rgb(35 31 23 / 0.2), rgb(0 0 0 / 0.6));
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+  }
+  .cta-card img {
+    display: block;
+    width: var(--gif);
+    height: auto;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+    background: var(--rule);
+  }
+  .cta:focus-visible .cta-card {
+    visibility: visible;
+    opacity: 1;
+  }
+  /* Touch screens keep :hover after a tap, and a tap should just open the profile. */
+  @media (hover: hover) {
+    .cta:hover .cta-card {
+      visibility: visible;
+      opacity: 1;
+    }
   }
   @media (prefers-reduced-motion: no-preference) {
     .cta {
@@ -1343,40 +1421,33 @@ const careerStops = site.experience
         box-shadow var(--duration) var(--ease),
         border-color var(--duration) var(--ease);
     }
-    .wave:hover .cta-emoji {
-      animation: wave 900ms ease-in-out;
+    .cta-card {
+      translate: 0 6px;
+      scale: 0.96;
+      transform-origin: 24px 100%;
+      transition:
+        opacity var(--duration) var(--ease),
+        translate 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        scale 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        visibility 0s var(--duration);
     }
-    .peek:hover .cta-emoji {
-      animation: peek 900ms ease-in-out;
-    }
-  }
-  @keyframes wave {
-    0%,
-    100% {
-      rotate: 0deg;
-    }
-    15%,
-    45% {
-      rotate: 18deg;
-    }
-    30%,
-    60% {
-      rotate: -10deg;
-    }
-    75% {
-      rotate: 6deg;
-    }
-  }
-  @keyframes peek {
-    0%,
-    100% {
+    .cta:focus-visible .cta-card {
       translate: 0 0;
+      scale: 1;
+      transition:
+        opacity var(--duration) var(--ease),
+        translate 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        scale 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    25% {
-      translate: -3px 0;
-    }
-    60% {
-      translate: 3px -1px;
+    @media (hover: hover) {
+      .cta:hover .cta-card {
+        translate: 0 0;
+        scale: 1;
+        transition:
+          opacity var(--duration) var(--ease),
+          translate 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+          scale 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
     }
   }
 
