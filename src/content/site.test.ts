@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { describe, expect, it } from "vite-plus/test";
+import { gifSizes } from "./gif-sizes";
 import { site } from "./site";
 
 const monthIndex = (ym: { year: number; month: number }) => ym.year * 12 + ym.month;
@@ -18,6 +19,15 @@ describe("site content", () => {
     const ids = site.links.flatMap((l) => l.gifs.flatMap((d) => [d.light, d.dark]));
     expect(ids).toHaveLength(28);
     expect(new Set(ids).size).toBe(28);
+  });
+
+  it("knows the size of every meme, so hover cards can match its shape", () => {
+    for (const l of site.links) {
+      for (const day of l.gifs) {
+        expect(gifSizes[day.light]).toBeDefined();
+        expect(gifSizes[day.dark]).toBeDefined();
+      }
+    }
   });
 
   it("references logos that exist in src/assets/logos/", () => {

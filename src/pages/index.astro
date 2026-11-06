@@ -5,6 +5,7 @@ import Moon from "../assets/icons/moon.svg";
 import Sun from "../assets/icons/sun.svg";
 import Layout from "@layouts/layout.astro";
 import avatar from "../assets/avatar.jpg";
+import { gifSizes } from "../content/gif-sizes";
 import { site, type DayGif } from "../content/site";
 import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
 import { gifAnimated, gifStill } from "../lib/gif";
@@ -35,6 +36,8 @@ const gifVars = (day: DayGif) =>
     `--still-dark:url(${gifStill(day.dark)})`,
     `--play-light:url(${gifAnimated(day.light)})`,
     `--play-dark:url(${gifAnimated(day.dark)})`,
+    `--ratio-light:${gifSizes[day.light].join("/")}`,
+    `--ratio-dark:${gifSizes[day.dark].join("/")}`,
   ].join(";");
 const first = site.experience.at(-1)!;
 const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left;
@@ -1684,12 +1687,14 @@ const careerStops = site.experience
   .shot {
     --still: var(--still-light);
     --play: var(--play-light);
+    --ratio: var(--ratio-light);
 
     background: var(--rule) var(--still) center / cover no-repeat;
   }
   :global([data-theme="dark"]) .shot {
     --still: var(--still-dark);
     --play: var(--play-dark);
+    --ratio: var(--ratio-dark);
   }
   .day {
     display: none;
@@ -1736,7 +1741,7 @@ const careerStops = site.experience
   }
   .cta-card .shot {
     width: var(--gif);
-    aspect-ratio: 4 / 3;
+    aspect-ratio: var(--ratio);
     border-radius: var(--radius-md);
   }
   .cta:focus-visible .cta-card {
