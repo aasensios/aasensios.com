@@ -22,26 +22,38 @@ export function barPosition(
 
 const round = (n: number) => Math.round(n * 1000) / 1000;
 
+type TrackOptions = {
+  mid: number;
+  rise?: number;
+  curve: number;
+  continues: boolean;
+  /** How much the line climbs per x unit while staying in a job. */
+  slope?: number;
+  /** How far the earlier job's run had already climbed when this job's climb starts. */
+  lift?: number;
+};
+
+/** Where a lane's run stops: early by `2 * curve` when a later job climbs out of it. */
+export function runEnd(left: number, width: number, curve: number, continues: boolean): number {
+  return Math.max(left, left + width - (continues ? curve * 2 : 0));
+}
+
+/** How much a lane's run climbs from its start to its end. */
+export function runClimb(left: number, width: number, opts: TrackOptions): number {
+  return (opts.slope ?? 0) * (runEnd(left, width, opts.curve, opts.continues) - left);
+}
+
 /**
  * A lane's stretch of the career line, in a viewBox that is 100 wide (percent of the axis).
- * It climbs in from the earlier job's lane `rise` units below with an S-curve that ends
- * exactly at `left`, so the stop marker sits where the job starts. When a later job
- * `continues` the line, the run stops `2 * curve` early to leave room for that job's climb.
+ * It climbs in from the earlier job's lane with an S-curve that ends exactly at `left`, so
+ * the stop marker sits where the job starts, then keeps rising gently by `slope`.
  */
-export function trackPath(
-  left: number,
-  width: number,
-  {
-    mid,
-    rise,
-    curve,
-    continues,
-  }: { mid: number; rise?: number; curve: number; continues: boolean },
-): string {
-  const end = left + width - (continues ? curve * 2 : 0);
-  const run = `H ${round(Math.max(left, end))}`;
+export function trackPath(left: number, width: number, opts: TrackOptions): string {
+  const { mid, rise, curve } = opts;
+  const end = runEnd(left, width, curve, opts.continues);
+  const run = `L ${round(end)} ${round(mid - runClimb(left, width, opts))}`;
   if (!rise) return `M ${round(left)} ${mid} ${run}`;
-  const below = mid + rise;
+  const below = round(mid + rise - (opts.lift ?? 0));
   return [
     `M ${round(left - curve * 2)} ${below}`,
     `C ${round(left - curve)} ${below} ${round(left - curve)} ${mid} ${round(left)} ${mid}`,

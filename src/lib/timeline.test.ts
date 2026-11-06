@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { axisYears, barPosition, trackPath } from "./timeline";
+import { axisYears, barPosition, runClimb, trackPath } from "./timeline";
 
 describe("timeline", () => {
   const now = { year: 2026, month: 11 };
@@ -39,19 +39,28 @@ describe("timeline", () => {
   });
 
   it("draws the first job as a flat run", () => {
-    expect(trackPath(5, 20, { mid: 18, curve: 1, continues: true })).toBe("M 5 18 H 23");
+    expect(trackPath(5, 20, { mid: 18, curve: 1, continues: true })).toBe("M 5 18 L 23 18");
   });
 
   it("climbs from the lane below and reaches the lane exactly at the job start", () => {
     expect(trackPath(25, 50, { mid: 18, rise: 36, curve: 1, continues: false })).toBe(
-      "M 23 54 C 24 54 24 18 25 18 H 75",
+      "M 23 54 C 24 54 24 18 25 18 L 75 18",
     );
+  });
+
+  it("keeps rising within a job and starts the next climb from that height", () => {
+    const opts = { mid: 18, curve: 1, slope: 0.5 };
+    const earlier = trackPath(5, 20, { ...opts, continues: true });
+    expect(earlier).toBe("M 5 18 L 23 9");
+    const lift = runClimb(5, 20, { ...opts, continues: true });
+    const later = trackPath(25, 50, { ...opts, rise: 36, lift, continues: false });
+    expect(later.startsWith("M 23 45 ")).toBe(true);
   });
 
   it("meets the next job's climb where it begins", () => {
     const earlier = trackPath(5, 20, { mid: 18, curve: 1, continues: true });
     const later = trackPath(25, 50, { mid: 18, rise: 36, curve: 1, continues: false });
-    expect(earlier.endsWith("H 23")).toBe(true);
+    expect(earlier.endsWith("L 23 18")).toBe(true);
     expect(later.startsWith("M 23 ")).toBe(true);
   });
 });

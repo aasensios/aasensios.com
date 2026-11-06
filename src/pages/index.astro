@@ -8,7 +8,7 @@ import avatar from "../assets/avatar.jpg";
 import { site, type DayGif } from "../content/site";
 import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
 import { gifAnimated, gifStill } from "../lib/gif";
-import { axisYears, barPosition, trackPath } from "../lib/timeline";
+import { axisYears, barPosition, runClimb, trackPath } from "../lib/timeline";
 
 const now = toYearMonth(new Date());
 const copy = site.copy;
@@ -38,6 +38,7 @@ const gifVars = (day: DayGif) =>
 const first = site.experience.at(-1)!;
 const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left - CURVE * 2;
 const span = 100 - origin;
+const SLOPE = 0.2;
 const GLINT_W = 8;
 const GLINT_H = 3;
 const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
@@ -175,17 +176,29 @@ const careerStops = site.experience
                     now,
                     later?.start,
                   );
-                  const d = trackPath(left, width, {
+                  const track = {
                     mid: LANE / 2,
-                    rise: earlier ? LANE : undefined,
                     curve: CURVE,
+                    slope: SLOPE,
                     continues: Boolean(later),
+                  };
+                  const before =
+                    earlier &&
+                    barPosition(earlier.start, earlier.end, site.firstJobStart.year, now, e.start);
+                  const lift = before
+                    ? runClimb(before.left, before.width, { ...track, continues: true })
+                    : 0;
+                  const climb = runClimb(left, width, track);
+                  const d = trackPath(left, width, {
+                    ...track,
+                    rise: earlier ? LANE : undefined,
+                    lift,
                   });
                   const Logo = logo(e.logo);
                   return (
                     <li
                       class="lane"
-                      style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color};--stop-at:${at(left)}`}
+                      style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color};--stop-at:${at(left)};--climb:${climb.toFixed(3)}px`}
                     >
                       <svg class="track" viewBox={`0 0 100 ${LANE}`} preserveAspectRatio="none">
                         <defs>
@@ -219,7 +232,7 @@ const careerStops = site.experience
                               width={GLINT_W}
                               height={GLINT_H}
                               fill="url(#glint)"
-                              style={`--run:${(width - GLINT_W).toFixed(3)}`}
+                              style={`--run:${(width - GLINT_W).toFixed(3)};--run-y:${(SLOPE * (width - GLINT_W)).toFixed(3)}`}
                             />
                           </>
                         )}
@@ -1025,6 +1038,7 @@ const careerStops = site.experience
   .now {
     --halo: rgb(255 180 60 / 0.6);
 
+    top: calc(50% - var(--climb));
     left: calc(var(--left) + var(--width));
     width: var(--space-6);
     height: var(--space-6);
@@ -1304,7 +1318,7 @@ const careerStops = site.experience
       opacity: 1;
     }
     to {
-      transform: translateX(calc(var(--run) * 1px));
+      transform: translate(calc(var(--run) * 1px), calc(var(--run-y) * -1px));
       opacity: 0;
     }
   }
