@@ -141,12 +141,12 @@ export const site = {
     ],
     facts: (years: number) =>
       `I've been shipping software for more than ${years} years now. Based in Barcelona, working fully remote.`,
-    theme: { label: "Dark mode", toDark: "Switch to dark mode", toLight: "Switch to light mode" },
+    theme: { label: "Dark mode", toDark: "See the sunset", toLight: "See the dawn" },
     avatar: { open: "View photo of Alejandro Asensio", close: "Close photo" },
     pack: {
       open: "Meet the whole furry family",
-      title: "The whole pack",
-      lede: "A dog and a cat for each button, every day of the week. They change at your midnight.",
+      title: "The whole furry family",
+      lede: "Dogs for daylight, cats for the mighty night. Gifs in CTAs change after switching the dark/light mode.",
       close: "Close",
       today: "Today",
       themes: { light: "Day", dark: "Night" },
@@ -155,8 +155,6 @@ export const site = {
     chart: {
       replay: "Replay chart animation",
       replayTip: "Replay",
-      speed: (rate: string) => `Animation speed, ${rate}`,
-      speedTip: (rate: string) => `Speed ${rate}`,
     },
     footer: [
       { label: "Made with", link: { label: "Astro", href: "https://astro.build/" } },

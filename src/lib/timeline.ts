@@ -27,29 +27,38 @@ type TrackOptions = {
   rise?: number;
   curve: number;
   continues: boolean;
-  /** How much the line climbs per x unit while staying in a job. */
-  slope?: number;
+  /** Scales the climb within a job, which grows with the log of how long the job lasted. */
+  growth?: number;
   /** How far the earlier job's run had already climbed when this job's climb starts. */
   lift?: number;
 };
+
+const SAMPLES = 16;
+
+/** Logarithmic easing: fast early growth that levels off, 0 at t = 0 and 1 at t = 1. */
+export const logEase = (t: number) => Math.log1p(9 * t) / Math.log(10);
 
 export function runEnd(left: number, width: number, curve: number, continues: boolean): number {
   return Math.max(left, left + width - (continues ? curve * 2 : 0));
 }
 
 export function runClimb(left: number, width: number, opts: TrackOptions): number {
-  return (opts.slope ?? 0) * (runEnd(left, width, opts.curve, opts.continues) - left);
+  return (opts.growth ?? 0) * Math.log1p(runEnd(left, width, opts.curve, opts.continues) - left);
 }
 
 /**
  * A lane's stretch of the career line, in a viewBox that is 100 wide (percent of the axis).
  * It climbs in from the earlier job's lane with an S-curve that ends exactly at `left`, so
- * the stop marker sits where the job starts, then keeps rising gently by `slope`.
+ * the stop marker sits where the job starts, then keeps rising along a logarithmic curve.
  */
 export function trackPath(left: number, width: number, opts: TrackOptions): string {
   const { mid, rise, curve } = opts;
   const end = runEnd(left, width, curve, opts.continues);
-  const run = `L ${round(end)} ${round(mid - runClimb(left, width, opts))}`;
+  const climb = runClimb(left, width, opts);
+  const run = Array.from({ length: SAMPLES }, (_, i) => {
+    const t = (i + 1) / SAMPLES;
+    return `L ${round(left + (end - left) * t)} ${round(mid - climb * logEase(t))}`;
+  }).join(" ");
   if (!rise) return `M ${round(left)} ${mid} ${run}`;
   const below = round(mid + rise - (opts.lift ?? 0));
   return [

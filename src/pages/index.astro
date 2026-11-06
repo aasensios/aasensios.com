@@ -8,7 +8,7 @@ import avatar from "../assets/avatar.jpg";
 import { site, type DayGif } from "../content/site";
 import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
 import { gifAnimated, gifStill } from "../lib/gif";
-import { axisYears, barPosition, runClimb, trackPath } from "../lib/timeline";
+import { axisYears, barPosition, logEase, runClimb, trackPath } from "../lib/timeline";
 
 const now = toYearMonth(new Date());
 const copy = site.copy;
@@ -37,9 +37,17 @@ const gifVars = (day: DayGif) =>
 const first = site.experience.at(-1)!;
 const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left - CURVE * 2;
 const span = 100 - origin;
-const SLOPE = 0.2;
+const GROWTH = 3;
 const GLINT_W = 8;
 const GLINT_H = 3;
+/* The glint follows the log curve through four waypoints along the current job's run. */
+const glintVars = (width: number, climb: number) =>
+  [0.25, 0.5, 0.75, 1]
+    .map((p, i) => {
+      const x = p * (width - GLINT_W);
+      return `--gx${i}:${x.toFixed(3)}px;--gy${i}:${(-climb * logEase(x / width)).toFixed(3)}px`;
+    })
+    .join(";");
 const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
 const careerStops = site.experience
   .map((e) => ({
@@ -132,31 +140,14 @@ const careerStops = site.experience
             style={`--years:${axis.length};--lane:${LANE}px;--origin:${origin.toFixed(3)}%`}
             data-chart
           >
-            <div class="chart-tools">
-              <span class="chart-tool">
-                <button
-                  type="button"
-                  aria-label={copy.chart.speed("1×")}
-                  data-chart-speed
-                  data-label={copy.chart.speed("{rate}")}
-                  data-tip={copy.chart.speedTip("{rate}")}
-                >
-                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                    <path d="M2.5 11.5a5.5 5.5 0 1 1 11 0" />
-                    <path class="needle" d="M8 11.5V7" />
-                  </svg>
-                </button>
-                <span class="tool-tip" aria-hidden="true">{copy.chart.speedTip("1×")}</span>
-              </span>
-              <span class="chart-tool replay">
-                <button type="button" aria-label={copy.chart.replay} data-chart-replay>
-                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                    <path d="M3.5 8a4.5 4.5 0 1 0 1.32-3.18M4.5 2.5v2.5H7" />
-                  </svg>
-                </button>
-                <span class="tool-tip" aria-hidden="true">{copy.chart.replayTip}</span>
-              </span>
-            </div>
+            <span class="chart-tool replay">
+              <button type="button" aria-label={copy.chart.replay} data-chart-replay>
+                <svg viewBox="0 0 16 16" width="24" height="24" aria-hidden="true">
+                  <path d="M3.5 8a4.5 4.5 0 1 0 1.32-3.18M4.5 2.5v2.5H7" />
+                </svg>
+              </button>
+              <span class="tool-tip" aria-hidden="true">{copy.chart.replayTip}</span>
+            </span>
             <div class="grid" aria-hidden="true">
               {axis.map(() => (
                 <span />
@@ -177,7 +168,7 @@ const careerStops = site.experience
                   const track = {
                     mid: LANE / 2,
                     curve: CURVE,
-                    slope: SLOPE,
+                    growth: GROWTH,
                     continues: Boolean(later),
                   };
                   const before =
@@ -230,7 +221,7 @@ const careerStops = site.experience
                               width={GLINT_W}
                               height={GLINT_H}
                               fill="url(#glint)"
-                              style={`--run:${(width - GLINT_W).toFixed(3)};--run-y:${(SLOPE * (width - GLINT_W)).toFixed(3)}`}
+                              style={glintVars(width, climb)}
                             />
                           </>
                         )}
@@ -453,29 +444,11 @@ const careerStops = site.experience
     }
   });
   /* Replay drops every animation for one frame of style, then lets them all start over. */
-  const RATES = [1, 2, 0.5];
-  let rate = 1;
-  const applyRate = () => {
-    for (const animation of chart?.getAnimations({ subtree: true }) ?? []) {
-      animation.updatePlaybackRate(rate);
-    }
-  };
   chart?.querySelector("[data-chart-replay]")?.addEventListener("click", () => {
     chart.removeAttribute("data-done");
     chart.toggleAttribute("data-replay", true);
     chart.getBoundingClientRect();
     chart.removeAttribute("data-replay");
-    chart.getBoundingClientRect();
-    applyRate();
-  });
-  const speed = chart?.querySelector<HTMLButtonElement>("[data-chart-speed]");
-  speed?.addEventListener("click", () => {
-    rate = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
-    const label = `${rate}×`;
-    speed.setAttribute("aria-label", speed.dataset.label!.replace("{rate}", label));
-    speed.nextElementSibling!.textContent = speed.dataset.tip!.replace("{rate}", label);
-    speed.style.setProperty("--needle", `${Math.log2(rate) * 50}deg`);
-    applyRate();
   });
 
   if (!matchMedia("(hover: hover)").matches) {
@@ -1088,16 +1061,12 @@ const careerStops = site.experience
   .card-meta {
     color: var(--muted);
   }
-  .chart-tools {
-    position: absolute;
-    top: var(--space-2);
-    left: var(--space-2);
-    z-index: 3;
-    display: flex;
-    gap: var(--space-1);
-  }
   .chart-tool {
-    position: relative;
+    position: absolute;
+    top: calc((100% - var(--axis)) / 2);
+    left: 50%;
+    z-index: 3;
+    translate: -50% -50%;
   }
   .replay {
     visibility: hidden;
@@ -1107,17 +1076,16 @@ const careerStops = site.experience
     visibility: visible;
     opacity: 1;
   }
-  .needle {
-    transform-origin: 8px 11.5px;
-    rotate: var(--needle, 0deg);
-  }
   .chart-tool button {
     display: grid;
     place-items: center;
-    width: var(--space-8);
-    height: var(--space-8);
+    width: var(--space-12);
+    height: var(--space-12);
+    border: var(--hairline);
     border-radius: 50%;
+    background: var(--bg);
     color: var(--muted);
+    box-shadow: 0 8px 24px -8px light-dark(rgb(35 31 23 / 0.2), rgb(0 0 0 / 0.6));
     cursor: pointer;
   }
   .chart-tool button:hover,
@@ -1138,7 +1106,8 @@ const careerStops = site.experience
   .tool-tip {
     position: absolute;
     top: calc(100% + var(--space-2));
-    left: 0;
+    left: 50%;
+    translate: -50% 0;
     width: max-content;
     padding: var(--space-1) var(--space-2);
     border: var(--hairline);
@@ -1194,9 +1163,6 @@ const careerStops = site.experience
     .chart[data-done] .replay {
       transition: opacity 300ms var(--ease);
     }
-    .needle {
-      transition: rotate 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
     .tool-tip {
       transition:
         opacity var(--duration) var(--ease),
@@ -1245,7 +1211,7 @@ const careerStops = site.experience
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .chart-tools,
+    .chart-tool,
     .glint {
       display: none;
     }
@@ -1280,15 +1246,26 @@ const careerStops = site.experience
   /* SVG transforms are in user units, which are percent of the axis here. */
   @keyframes glint {
     from {
-      transform: translateX(0);
+      transform: translate(0, 0);
       opacity: 0;
     }
-    20%,
+    20% {
+      opacity: 1;
+    }
+    25% {
+      transform: translate(var(--gx0), var(--gy0));
+    }
+    50% {
+      transform: translate(var(--gx1), var(--gy1));
+    }
+    75% {
+      transform: translate(var(--gx2), var(--gy2));
+    }
     80% {
       opacity: 1;
     }
     to {
-      transform: translate(calc(var(--run) * 1px), calc(var(--run-y) * -1px));
+      transform: translate(var(--gx3), var(--gy3));
       opacity: 0;
     }
   }
