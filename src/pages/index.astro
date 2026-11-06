@@ -167,7 +167,7 @@ const careerStops = site.experience
           >
             <span class="chart-tool replay">
               <button type="button" aria-label={copy.chart.replay} data-chart-replay>
-                <svg viewBox="0 0 16 16" width="24" height="24" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
                   <path d="M3.5 8a4.5 4.5 0 1 0 1.32-3.18M4.5 2.5v2.5H7" />
                 </svg>
               </button>
@@ -517,6 +517,51 @@ const careerStops = site.experience
     chart.getBoundingClientRect();
     chart.removeAttribute("data-replay");
   });
+
+  const plot = document.querySelector<HTMLElement>(".lanes");
+  if (chart && plot && matchMedia("(hover: hover)").matches) {
+    const still = matchMedia("(prefers-reduced-motion: reduce)");
+    const EDGE = 8;
+    let target = { x: 0, y: 0 };
+    let at = { x: 0, y: 0 };
+    let frame = 0;
+    let active: HTMLElement | null = null;
+    const place = () => {
+      const half = (active?.offsetWidth ?? 0) / 2;
+      const box = plot.getBoundingClientRect();
+      const frameBox = chart.getBoundingClientRect();
+      const min = frameBox.left - box.left + half + EDGE;
+      const max = frameBox.right - box.left - half - EDGE;
+      plot.style.setProperty("--x", `${Math.min(Math.max(at.x, min), max)}px`);
+      plot.style.setProperty("--y", `${at.y}px`);
+    };
+    const ease = () => {
+      at.x += (target.x - at.x) * 0.2;
+      at.y += (target.y - at.y) * 0.2;
+      place();
+      const settled = Math.abs(target.x - at.x) < 0.5 && Math.abs(target.y - at.y) < 0.5;
+      frame = settled ? 0 : requestAnimationFrame(ease);
+    };
+    plot.toggleAttribute("data-follow", true);
+    plot.addEventListener("pointermove", (event) => {
+      const box = plot.getBoundingClientRect();
+      target = { x: event.clientX - box.left, y: event.clientY - box.top };
+      const lane = (event.target as Element).closest(".lane");
+      const card = lane?.querySelector<HTMLElement>(".card") ?? null;
+      if (card !== active) {
+        const fresh = !active;
+        active = card;
+        if (fresh) at = { ...target };
+      }
+      if (still.matches) {
+        at = { ...target };
+        place();
+      } else if (!frame) frame = requestAnimationFrame(ease);
+    });
+    plot.addEventListener("pointerleave", () => {
+      active = null;
+    });
+  }
 
   if (!matchMedia("(hover: hover)").matches) {
     const lanes = [...document.querySelectorAll<HTMLElement>(".lane")];
@@ -1174,11 +1219,11 @@ const careerStops = site.experience
     --axis: 28px;
     --dimmed: 0.3;
     --inset-x: var(--space-3);
-    --inset-y: var(--space-2);
+    --inset-y: var(--space-5);
 
     position: relative;
     margin-top: var(--flow);
-    padding: var(--inset-y) var(--inset-x) var(--space-2);
+    padding: var(--inset-y) var(--inset-x) var(--space-3);
     border: var(--hairline);
     border-radius: var(--radius-xl);
     corner-shape: squircle;
@@ -1341,6 +1386,12 @@ const careerStops = site.experience
       opacity: 1;
     }
   }
+  /* With a mouse, the card rides above the pointer; --x and --y are eased in script. */
+  .lanes[data-follow] .card {
+    top: var(--y);
+    left: var(--x);
+    translate: -50% calc(-100% - var(--space-3));
+  }
   .lane[data-open] .card {
     visibility: visible;
     opacity: 1;
@@ -1348,10 +1399,11 @@ const careerStops = site.experience
   .card-meta {
     color: var(--muted);
   }
+  /* Top-left sits above the curve's start, the one corner the line never reaches. */
   .chart-tool {
     position: absolute;
-    right: var(--space-4);
-    bottom: calc(var(--axis) + var(--space-2));
+    top: var(--space-2);
+    left: var(--space-2);
     z-index: 3;
   }
   .replay {
@@ -1365,17 +1417,17 @@ const careerStops = site.experience
   .chart-tool button {
     display: grid;
     place-items: center;
-    width: var(--space-12);
-    height: var(--space-12);
-    border: var(--hairline);
+    width: var(--space-8);
+    height: var(--space-8);
+    border: 0;
     border-radius: 50%;
-    background: var(--bg);
+    background: transparent;
     color: var(--muted);
-    box-shadow: 0 8px 24px -8px light-dark(rgb(35 31 23 / 0.2), rgb(0 0 0 / 0.6));
     cursor: pointer;
   }
   .chart-tool button:hover,
   .chart-tool button:focus-visible {
+    background: var(--rule);
     color: var(--fg);
   }
   .chart-tool button:focus-visible {
@@ -1392,7 +1444,7 @@ const careerStops = site.experience
   .tool-tip {
     position: absolute;
     top: 50%;
-    right: calc(100% + var(--space-2));
+    left: calc(100% + var(--space-2));
     translate: 0 -50%;
     width: max-content;
     padding: var(--space-1) var(--space-2);
@@ -1968,7 +2020,7 @@ const careerStops = site.experience
     }
     .chart {
       --inset-x: var(--space-5);
-      --inset-y: var(--space-3);
+      --inset-y: var(--space-8);
     }
   }
 </style>
