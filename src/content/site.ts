@@ -155,13 +155,11 @@ export const site = {
       themes: { light: "Day", dark: "Night" },
       days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
       review: {
-        hint: "Dev only: mark GIFs for replacement.",
-        replace: "Replace",
-        marked: "marked",
-        copy: "Copy request",
-        copied: "Copied",
-        clear: "Clear",
-        request: "Replace these GIFs:",
+        suggest: "Suggest another",
+        another: "Another",
+        use: "Use this",
+        cancel: "Cancel",
+        none: "No more ideas",
       },
     },
     footer: [

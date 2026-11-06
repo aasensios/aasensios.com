@@ -39,6 +39,8 @@ const slides = [1, 2, 3, 4, 5, 6, 0].flatMap((day) =>
   site.links.flatMap((l) =>
     themes.map((theme) => ({
       day,
+      theme,
+      tag: l.tag,
       id: l.gifs[day][theme],
       key: `${copy.pack.days[day]} · ${copy.pack.themes[theme]} · ${l.tag}`,
       alt: `A ${theme === "light" ? "dog" : "cat"} ${l.meme}`,
@@ -254,6 +256,10 @@ const place = (e: (typeof site.experience)[number], i: number) =>
             </div>
             <div class="pack-viewport">
               <div class="pack-track" data-pack-track></div>
+              <span class="pack-copied" role="status" data-pack-copied data-text={copy.pack.copied} />
+            </div>
+            <div class="pack-foot">
+              <p class="pack-caption" data-pack-caption></p>
               <nav class="pack-nav">
                 <button type="button" aria-label={copy.pack.prev} data-pack-prev>
                   <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
@@ -266,12 +272,16 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                   </svg>
                 </button>
               </nav>
-              <span class="pack-copied" role="status" data-pack-copied data-text={copy.pack.copied} />
             </div>
             <template data-pack-items>
               {slides.map((s) => (
-                <section class="pack-slide" data-key={s.key} data-day={s.day}>
-                  <p class="pack-slide-head">{s.key}</p>
+                <section
+                  class="pack-slide"
+                  data-key={s.key}
+                  data-day={s.day}
+                  data-theme={s.theme}
+                  data-tag={s.tag}
+                >
                   <div class="pack-stage">
                     <button
                       type="button"
@@ -295,37 +305,22 @@ const place = (e: (typeof site.experience)[number], i: number) =>
                       </picture>
                     </button>
                     {review && (
-                      <button type="button" class="pack-replace" aria-pressed="false" data-mark>
-                        {copy.pack.review.replace}
-                      </button>
+                      <span class="pack-suggest" data-suggest data-none={copy.pack.review.none}>
+                        <button type="button" data-suggest-next data-again={copy.pack.review.another}>
+                          {copy.pack.review.suggest}
+                        </button>
+                        <button type="button" data-suggest-use hidden>
+                          {copy.pack.review.use}
+                        </button>
+                        <button type="button" data-suggest-cancel hidden>
+                          {copy.pack.review.cancel}
+                        </button>
+                      </span>
                     )}
                   </div>
                 </section>
               ))}
             </template>
-            {
-              review && (
-                <footer class="pack-review" data-pack-review>
-                  <span>
-                    {copy.pack.review.hint} <strong data-count>0</strong> {copy.pack.review.marked}
-                  </span>
-                  <span class="pack-review-actions">
-                    <button type="button" data-review-clear>
-                      {copy.pack.review.clear}
-                    </button>
-                    <button
-                      type="button"
-                      class="pack-review-copy"
-                      data-review-copy
-                      data-copied={copy.pack.review.copied}
-                      data-request={copy.pack.review.request}
-                    >
-                      {copy.pack.review.copy}
-                    </button>
-                  </span>
-                </footer>
-              )
-            }
           </dialog>
         </section>
       </main>
@@ -426,19 +421,53 @@ const place = (e: (typeof site.experience)[number], i: number) =>
   const next = pack?.querySelector<HTMLButtonElement>("[data-pack-next]");
   const WEEK = [1, 2, 3, 4, 5, 6, 0];
   const PER_DAY = stories.length / WEEK.length;
-  const current = () => (track ? Math.round(track.scrollLeft / track.clientWidth) : 0);
+  const COUNT = stories.length;
+  const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const position = () => (track ? Math.round(track.scrollLeft / track.clientWidth) : 0);
+  const current = () => position() % COUNT;
+  const scrollTo = (slot: number, smooth: boolean) =>
+    track?.scrollTo({ left: slot * track.clientWidth, behavior: smooth && !still() ? "smooth" : "instant" });
+  /*
+   * A copy of the first GIF sits after the last, so the loop keeps sliding right: past the end
+   * it lands on the copy, then quietly jumps back to the real first one.
+   */
+  let rewinding = false;
   const show = (index: number, smooth = true) => {
     if (!track) return;
-    const i = (index + stories.length) % stories.length;
-    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    track.scrollTo({ left: i * track.clientWidth, behavior: smooth && !still ? "smooth" : "instant" });
+    const from = current();
+    if (index >= COUNT && from === COUNT - 1) return scrollTo(COUNT, smooth);
+    if (index < 0 && from === 0) {
+      rewinding = true;
+      scrollTo(COUNT, false);
+      return requestAnimationFrame(() => scrollTo(COUNT - 1, smooth));
+    }
+    scrollTo((index + COUNT) % COUNT, smooth);
+  };
+  const caption = pack?.querySelector<HTMLElement>("[data-pack-caption]");
+  let captionTimer = 0;
+  const setCaption = (text: string) => {
+    if (!caption || caption.textContent === text) return;
+    if (!caption.textContent || still()) {
+      caption.textContent = text;
+      return;
+    }
+    caption.toggleAttribute("data-fading", true);
+    clearTimeout(captionTimer);
+    captionTimer = window.setTimeout(() => {
+      caption.textContent = text;
+      caption.removeAttribute("data-fading");
+    }, 150);
   };
   /* Stories-style progress: earlier GIFs are full, the current one fills, later ones wait. */
   let shown = -1;
   const sync = () => {
+    if (rewinding && position() !== COUNT) rewinding = false;
+    const atCopy = !!track && Math.abs(track.scrollLeft - COUNT * track.clientWidth) < 1;
+    if (atCopy && !rewinding) scrollTo(0, false);
     const i = current();
     if (i === shown) return;
     shown = i;
+    setCaption(track?.children[i]?.getAttribute("data-key") ?? "");
     stories.forEach((story, s) => {
       story.toggleAttribute("data-done", s < i);
       story.toggleAttribute("aria-current", s === i);
@@ -458,19 +487,37 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     if (event.key === "ArrowLeft") show(current() - 1);
     if (event.key === "ArrowRight") show(current() + 1);
   });
-  /* Hovering or focusing a GIF holds its bar, so there's time to look or copy. */
-  const hold = (on: boolean) => pack?.toggleAttribute("data-paused", on);
-  track?.addEventListener("pointerenter", (event) => event.pointerType === "mouse" && hold(true));
-  track?.addEventListener("pointerleave", () => hold(false));
-  track?.addEventListener("focusin", () => hold(true));
-  track?.addEventListener("focusout", () => hold(false));
-  document.querySelector("[data-pack-open]")?.addEventListener("click", () => {
+  /* Hovering, focusing or reviewing a GIF holds its bar, so there's time to look or copy. */
+  const hold = () =>
+    pack?.toggleAttribute(
+      "data-paused",
+      !!track && (track.matches(":hover, :focus-within") || !!track.querySelector("[data-candidate]")),
+    );
+  for (const type of ["pointerenter", "pointerleave", "focusin", "focusout"]) {
+    track?.addEventListener(type, () => requestAnimationFrame(hold));
+  }
+  const openPack = (index: number) => {
     const items = pack?.querySelector<HTMLTemplateElement>("[data-pack-items]");
-    if (track && items && !track.childElementCount) track.append(items.content.cloneNode(true));
+    if (track && items && !track.childElementCount) {
+      track.append(items.content.cloneNode(true));
+      const loop = track.firstElementChild!.cloneNode(true) as HTMLElement;
+      loop.inert = true;
+      loop.setAttribute("aria-hidden", "true");
+      track.append(loop);
+    }
     pack?.showModal();
     shown = -1;
-    show(WEEK.indexOf(Number(document.documentElement.dataset.day ?? 1)) * PER_DAY, false);
+    show(index, false);
     sync();
+  };
+  document.querySelector("[data-pack-open]")?.addEventListener("click", () => {
+    openPack(WEEK.indexOf(Number(document.documentElement.dataset.day ?? 1)) * PER_DAY);
+  });
+  /* #family-12 opens the gallery on that GIF, which is how a review picks up after a reload. */
+  const deepLink = /^#family-(\d+)$/.exec(location.hash);
+  if (deepLink) openPack(Number(deepLink[1]));
+  pack?.addEventListener("close", () => {
+    if (location.hash.startsWith("#family-")) history.replaceState(null, "", location.pathname);
   });
   pack?.addEventListener("click", (event) => {
     if (event.target === pack) pack.close();
@@ -495,53 +542,77 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     }, 1600);
   });
 
-  const reviewBar = pack?.querySelector<HTMLElement>("[data-pack-review]");
-  if (pack && reviewBar) {
-    const KEY = "pack-marks";
-    const load = (): string[] => {
-      try {
-        return JSON.parse(localStorage.getItem(KEY) ?? "[]");
-      } catch {
-        return [];
-      }
+  /*
+   * Dev only: ask the dev server for another GIF that fits the slot, preview it in place, and
+   * write the chosen one into the site's source. Nothing is kept in the browser.
+   */
+  pack?.addEventListener("click", async (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>("[data-suggest] button");
+    const slide = button?.closest<HTMLElement>(".pack-slide");
+    if (!button || !slide) return;
+    const tools = slide.querySelector<HTMLElement>("[data-suggest]")!;
+    const [suggest, use, cancel] = tools.querySelectorAll("button");
+    const img = slide.querySelector("img")!;
+    const source = slide.querySelector("source")!;
+    const original = slide.dataset.original ?? (slide.dataset.original = img.getAttribute("src")!);
+    const showGif = (still: string, animated: string) => {
+      img.src = still;
+      source.srcset = animated;
     };
-    let marks = new Set(load());
-    const syncMarks = () => {
-      for (const slide of pack.querySelectorAll<HTMLElement>(".pack-slide")) {
-        const on = marks.has(slide.dataset.key!);
-        slide.toggleAttribute("data-marked", on);
-        slide.querySelector("[data-mark]")?.setAttribute("aria-pressed", String(on));
-      }
-      reviewBar.querySelector("[data-count]")!.textContent = String(marks.size);
-      try {
-        localStorage.setItem(KEY, JSON.stringify([...marks]));
-      } catch {}
+    const reset = () => {
+      showGif(original, original.replace("200w_s.gif", "200w.webp"));
+      delete slide.dataset.candidate;
+      slide.dataset.skip = "";
+      suggest.textContent = suggest.dataset.label ?? suggest.textContent;
+      use.hidden = cancel.hidden = true;
+      hold();
     };
-    document.querySelector("[data-pack-open]")?.addEventListener("click", syncMarks);
-    pack.addEventListener("click", (event) => {
-      const mark = (event.target as Element).closest<HTMLElement>("[data-mark]");
-      if (!mark) return;
-      const key = mark.closest<HTMLElement>(".pack-slide")!.dataset.key!;
-      if (!marks.delete(key)) marks.add(key);
-      syncMarks();
-    });
-    reviewBar.querySelector("[data-review-clear]")?.addEventListener("click", () => {
-      marks = new Set();
-      syncMarks();
-    });
-    const copyButton = reviewBar.querySelector<HTMLButtonElement>("[data-review-copy]")!;
-    const label = copyButton.textContent;
-    copyButton.addEventListener("click", async () => {
-      const template = pack.querySelector<HTMLTemplateElement>("[data-pack-items]")!;
-      const order = [...template.content.querySelectorAll<HTMLElement>(".pack-slide")].map(
-        (s) => s.dataset.key!,
-      );
-      const lines = order.filter((key) => marks.has(key)).map((key) => `* ${key}`);
-      await navigator.clipboard.writeText([copyButton.dataset.request, ...lines].join("\n"));
-      copyButton.textContent = copyButton.dataset.copied!;
-      setTimeout(() => (copyButton.textContent = label), 1500);
-    });
-  }
+    if (button === cancel) return reset();
+    if (button === suggest) {
+      suggest.dataset.label ??= suggest.textContent!;
+      suggest.disabled = true;
+      const kind = slide.dataset.theme === "light" ? "dog" : "cat";
+      const skip = [slide.dataset.skip, slide.dataset.candidate].filter(Boolean).join(",");
+      const res = await fetch(`/__gifs/suggest?kind=${kind}&tag=${slide.dataset.tag}&skip=${skip}`);
+      suggest.disabled = false;
+      if (!res.ok) {
+        suggest.textContent = tools.dataset.none!;
+        return;
+      }
+      const gif: { id: string; width: number; height: number } = await res.json();
+      slide.dataset.skip = skip;
+      slide.dataset.candidate = gif.id;
+      slide.dataset.size = `${gif.width}x${gif.height}`;
+      const base = `https://media.giphy.com/media/${gif.id}`;
+      showGif(`${base}/200w_s.gif`, `${base}/200w.webp`);
+      suggest.textContent = suggest.dataset.again!;
+      use.hidden = cancel.hidden = false;
+      hold();
+      return;
+    }
+    if (button === use && slide.dataset.candidate) {
+      const [width, height] = slide.dataset.size!.split("x").map(Number);
+      use.disabled = true;
+      const res = await fetch("/__gifs/use", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          tag: slide.dataset.tag,
+          day: Number(slide.dataset.day),
+          theme: slide.dataset.theme,
+          id: slide.dataset.candidate,
+          width,
+          height,
+        }),
+      });
+      if (!res.ok) {
+        use.disabled = false;
+        return;
+      }
+      location.hash = `family-${current()}`;
+      location.reload();
+    }
+  });
 
   const portrait = document.querySelector<HTMLDialogElement>("[data-avatar-dialog]");
   document.querySelector("[data-avatar-open]")?.addEventListener("click", () => portrait?.showModal());
@@ -821,16 +892,22 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     margin: 0;
     scroll-snap-align: start;
   }
-  /* Room on the right for the arrows, which float over every slide's caption row. */
-  .pack-slide-head {
+  /* The name stays put under the GIF and fades from one to the next. */
+  .pack-foot {
     display: flex;
     align-items: center;
-    min-height: var(--space-8);
-    margin: 0 0 var(--space-2);
-    padding-right: calc(var(--space-8) * 2 + var(--space-4));
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+  }
+  .pack-caption {
+    margin: 0;
     color: var(--muted);
     font-size: var(--text-caption);
     line-height: var(--leading-text);
+  }
+  .pack-caption[data-fading] {
+    opacity: 0;
   }
   .pack-stage {
     position: relative;
@@ -920,11 +997,8 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     outline-offset: var(--focus-offset);
   }
   .pack-nav {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 2;
     display: flex;
+    flex: none;
     gap: var(--space-2);
   }
   .pack-nav > button {
@@ -958,7 +1032,8 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     .pack[data-paused] .pack-stories button[aria-current]::after {
       animation-play-state: paused;
     }
-    .pack-copied {
+    .pack-copied,
+    .pack-caption {
       transition: opacity var(--duration) var(--ease);
     }
   }
@@ -967,11 +1042,15 @@ const place = (e: (typeof site.experience)[number], i: number) =>
       scale: 0 1;
     }
   }
-  .pack-replace {
+  .pack-suggest {
     position: absolute;
     top: var(--space-2);
     right: var(--space-2);
     z-index: 1;
+    display: flex;
+    gap: var(--space-1);
+  }
+  .pack-suggest button {
     padding: var(--space-1) var(--space-3);
     border: var(--hairline);
     border-radius: var(--radius-pill);
@@ -980,60 +1059,22 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     font-size: var(--text-caption);
     cursor: pointer;
   }
-  .pack-replace[aria-pressed="true"] {
-    border-color: #e5484d;
-    background: #e5484d;
-    color: #fff;
-  }
-  .pack-replace:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
-  }
-  .pack-slide[data-marked] img {
-    opacity: 0.55;
-  }
-  .pack-slide[data-marked] .pack-gif {
-    outline: 3px solid #e5484d;
-    outline-offset: -3px;
-  }
-  .pack-slide[data-marked] .pack-slide-head {
-    color: #e5484d;
-    text-decoration: line-through;
-  }
-  .pack-review {
-    position: sticky;
-    bottom: calc(var(--space-6) * -1);
-    z-index: 2;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    margin: var(--space-3) calc(var(--space-6) * -1) calc(var(--space-6) * -1);
-    padding: var(--space-3) var(--space-6);
-    border-top: var(--hairline);
-    background: var(--bg);
-    color: var(--muted);
-    font-size: var(--text-caption);
-  }
-  .pack-review strong {
-    color: var(--fg);
-  }
-  .pack-review-actions {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .pack-review button {
-    padding: var(--space-1) var(--space-3);
-    border: var(--hairline);
-    border-radius: var(--radius-pill);
-    color: var(--fg);
-    cursor: pointer;
-  }
-  .pack-review .pack-review-copy {
+  .pack-suggest [data-suggest-use] {
     border-color: var(--fg);
     background: var(--fg);
     color: var(--bg);
+  }
+  .pack-suggest button:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  .pack-suggest button:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  .pack-slide[data-candidate] .pack-gif {
+    outline: 2px dashed var(--fg);
+    outline-offset: -2px;
   }
   @media (prefers-reduced-motion: no-preference) {
     .pack,
