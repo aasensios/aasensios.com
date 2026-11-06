@@ -21,6 +21,13 @@ const logo = (file: string) => logos[`../assets/logos/${file}`];
 /* Career line geometry, in viewBox units: x is percent of the axis, y is pixels of a lane. */
 const LANE = 36;
 const CURVE = 1.2;
+/* The line draws itself at a steady pace through time, from the first job to today. */
+const first = site.experience.at(-1)!;
+const origin = barPosition(first.start, first.end, site.firstJobStart.year, now).left - CURVE * 2;
+const span = 100 - origin;
+const GLINT_W = 8;
+const GLINT_H = 3;
+const at = (x: number) => Math.max(0, (x - origin) / span).toFixed(4);
 ---
 
 <Layout
@@ -101,13 +108,31 @@ const CURVE = 1.2;
               ))
             }
           </ul>
-          <div class="chart" style={`--years:${axis.length};--lane:${LANE}px`} aria-hidden="true">
-            <div class="grid">
+          <div
+            class="chart"
+            style={`--years:${axis.length};--lane:${LANE}px;--origin:${origin.toFixed(3)}%`}
+            data-chart
+          >
+            <button
+              type="button"
+              class="chart-pause"
+              aria-label={copy.chart.pause}
+              aria-pressed="false"
+              data-chart-pause
+            >
+              <svg class="icon-pause" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d="M5.5 3.5v9M10.5 3.5v9" />
+              </svg>
+              <svg class="icon-play" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path d="M5 3.5v9l7.5-4.5z" />
+              </svg>
+            </button>
+            <div class="grid" aria-hidden="true">
               {axis.map(() => (
                 <span />
               ))}
             </div>
-            <ul class="lanes">
+            <ul class="lanes" aria-hidden="true">
               {
                 site.experience.map((e, i) => {
                   const later = site.experience[i - 1];
@@ -129,10 +154,30 @@ const CURVE = 1.2;
                   return (
                     <li
                       class="lane"
-                      style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color}`}
+                      style={`--left:${left}%;--width:${width}%;--brand:${e.color};--brand-dark:${e.colorDark ?? e.color};--stop-at:${at(left)}`}
                     >
                       <svg class="track" viewBox={`0 0 100 ${LANE}`} preserveAspectRatio="none">
                         <path d={d} />
+                        {!e.end && (
+                          <>
+                            <defs>
+                              <linearGradient id="glint">
+                                <stop offset="0" stop-color="#fff" stop-opacity="0" />
+                                <stop offset="0.5" stop-color="#fff" stop-opacity="0.85" />
+                                <stop offset="1" stop-color="#fff" stop-opacity="0" />
+                              </linearGradient>
+                            </defs>
+                            <rect
+                              class="glint"
+                              x={left}
+                              y={LANE / 2 - GLINT_H / 2}
+                              width={GLINT_W}
+                              height={GLINT_H}
+                              fill="url(#glint)"
+                              style={`--run:${(width - GLINT_W).toFixed(3)}`}
+                            />
+                          </>
+                        )}
                       </svg>
                       <span class="stop" />
                       {!e.end && <span class="now" />}
@@ -153,7 +198,7 @@ const CURVE = 1.2;
                 })
               }
             </ul>
-            <div class="axis">
+            <div class="axis" aria-hidden="true">
               {axis.map((y) => (
                 <span>{y}</span>
               ))}
@@ -211,6 +256,24 @@ const CURVE = 1.2;
 </Layout>
 
 <script>
+  /* The line draws itself once the chart is on screen, and the button pauses it and the pulse. */
+  const chart = document.querySelector<HTMLElement>("[data-chart]");
+  const pause = chart?.querySelector<HTMLButtonElement>("[data-chart-pause]");
+  if (chart) {
+    new IntersectionObserver(
+      (entries, observer) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        chart.toggleAttribute("data-seen", true);
+        observer.disconnect();
+      },
+      { threshold: 0.4 },
+    ).observe(chart);
+  }
+  pause?.addEventListener("click", () => {
+    const paused = chart!.toggleAttribute("data-paused");
+    pause.setAttribute("aria-pressed", String(paused));
+  });
+
   /* On touch screens a tap opens a lane's card; tapping it again or anywhere else closes it. */
   if (!matchMedia("(hover: hover)").matches) {
     const lanes = [...document.querySelectorAll<HTMLElement>(".lane")];
@@ -613,6 +676,41 @@ const CURVE = 1.2;
   .card-meta {
     color: var(--muted);
   }
+  .chart-pause {
+    position: absolute;
+    top: var(--space-2);
+    left: var(--space-2);
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: 50%;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .chart-pause:hover,
+  .chart-pause:focus-visible {
+    color: var(--fg);
+  }
+  .chart-pause:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  .chart-pause path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .chart-pause .icon-play path {
+    fill: currentColor;
+  }
+  .chart-pause[aria-pressed="true"] .icon-pause,
+  .chart-pause[aria-pressed="false"] .icon-play {
+    display: none;
+  }
   .axis {
     display: grid;
     grid-template-columns: repeat(var(--years), 1fr);
@@ -637,6 +735,92 @@ const CURVE = 1.2;
     }
     .lane:is(:hover, [data-open]) .card {
       transition: opacity var(--duration) var(--ease);
+    }
+
+    /*
+     * One pen draws the whole career at a steady pace: the lanes are wiped in from the first
+     * job to today, since x is time. Stops pop in as the pen passes them; then today's dot
+     * keeps breathing and a glint of light runs along the current job.
+     * (A stroke-dash draw doesn't work here: non-scaling strokes break dash lengths.)
+     */
+    .chart {
+      --draw: 2800ms;
+      --breath: 2400ms;
+    }
+    .lanes {
+      animation: wipe var(--draw) linear backwards;
+    }
+    .glint {
+      animation: glint var(--breath) var(--daybreak-ease) var(--draw) infinite both;
+    }
+    .stop {
+      animation: pop 300ms var(--ease) calc(var(--stop-at) * var(--draw)) both;
+    }
+    .now {
+      animation: pop 300ms var(--ease) var(--draw) both;
+    }
+    .now::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--line);
+      animation: breathe var(--breath) var(--ease) var(--draw) infinite both;
+    }
+    /* Hold everything at the start until the chart scrolls into view; without JS it just runs. */
+    :global(:root[data-js]) .chart:not([data-seen]) :is(.lanes, .glint, .stop, .now),
+    :global(:root[data-js]) .chart:not([data-seen]) .now::after,
+    .chart[data-paused] :is(.lanes, .glint, .stop, .now),
+    .chart[data-paused] .now::after {
+      animation-play-state: paused;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chart-pause,
+    .glint {
+      display: none;
+    }
+  }
+  /* Insets reach past the lanes so climbs, stops and today's dot aren't cut while drawing. */
+  @keyframes wipe {
+    from {
+      clip-path: inset(-24px calc(100% - var(--origin)) -24px -24px);
+    }
+    to {
+      clip-path: inset(-24px -24px -24px -24px);
+    }
+  }
+  /* SVG transforms are in user units, which are percent of the axis here. */
+  @keyframes glint {
+    from {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    20%,
+    80% {
+      opacity: 1;
+    }
+    to {
+      transform: translateX(calc(var(--run) * 1px));
+      opacity: 0;
+    }
+  }
+  @keyframes pop {
+    from {
+      scale: 0;
+    }
+    to {
+      scale: 1;
+    }
+  }
+  @keyframes breathe {
+    from {
+      scale: 1;
+      opacity: 0.5;
+    }
+    to {
+      scale: 2.6;
+      opacity: 0;
     }
   }
 
