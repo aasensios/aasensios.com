@@ -1,20 +1,8 @@
-/**
- * A fresh screenshot of a website, rendered on demand by Microlink's free API and cached on
- * its CDN. The image is requested by the visitor's browser only when a preview is shown.
- */
-export function previewImage(url: string): string {
-  const params = new URLSearchParams({
-    url,
-    screenshot: "true",
-    meta: "false",
-    embed: "screenshot.url",
-    "screenshot.type": "jpeg",
-    "viewport.width": "1280",
-    "viewport.height": "800",
-  });
-  return `https://api.microlink.io/?${params}`;
-}
-
 export function previewHost(url: string): string {
   return new URL(url).hostname.replace(/^www\./, "");
+}
+
+/** Screenshots live in src/assets/previews, named after the site's host without its TLD. */
+export function previewName(url: string): string {
+  return previewHost(url).split(".")[0];
 }

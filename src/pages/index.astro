@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { getImage, Image } from "astro:assets";
 import type { SvgComponent } from "astro/types";
 import Moon from "../assets/icons/moon.svg";
 import Sun from "../assets/icons/sun.svg";
@@ -10,6 +10,7 @@ import { site, type DayGif } from "../content/site";
 import { formatPeriodMonths, toYearMonth, yearsSince } from "../lib/dates";
 import { gifAnimated, gifStill } from "../lib/gif";
 import { careerY, curvePath } from "../lib/curve";
+import { previewName } from "../lib/preview";
 import { axisYears, barPosition } from "../lib/timeline";
 
 const now = toYearMonth(new Date());
@@ -21,6 +22,19 @@ const logos = import.meta.glob<SvgComponent>("../assets/logos/*.svg", {
   import: "default",
 });
 const logo = (file: string) => logos[`../assets/logos/${file}`];
+const shots = import.meta.glob<ImageMetadata>("../assets/previews/*.jpeg", {
+  eager: true,
+  import: "default",
+});
+const previews = new Map(
+  await Promise.all(
+    Object.entries(shots).map(async ([path, src]) => {
+      const { src: url } = await getImage({ src, width: 640, format: "webp", quality: 75 });
+      return [path.split("/").at(-1)!.replace(".jpeg", ""), url] as const;
+    }),
+  ),
+);
+const preview = (url: string) => previews.get(previewName(url));
 /* Career line geometry, in viewBox units: x is percent of the axis, y is pixels of the plot. */
 const PLOT = 128;
 /*
@@ -123,14 +137,19 @@ const careerStops = site.experience
                 <li class="row">
                   <span class="title">
                     {e.role} at{" "}
-                    <a href={e.url} target="_blank" rel="noopener" data-preview>
+                    <a href={e.url} target="_blank" rel="noopener" data-preview={preview(e.url)}>
                       {e.company}
                     </a>
                     {e.client && (
                       <>
                         {" "}
                         for{" "}
-                        <a href={e.client.url} target="_blank" rel="noopener" data-preview>
+                        <a
+                          href={e.client.url}
+                          target="_blank"
+                          rel="noopener"
+                          data-preview={preview(e.client.url)}
+                        >
                           {e.client.name}
                         </a>
                       </>
@@ -432,8 +451,7 @@ const careerStops = site.experience
 </Layout>
 
 <script>
-  import { previewHost, previewImage } from "../lib/preview";
-
+  import { previewHost } from "../lib/preview";
 
   const card = document.querySelector<HTMLElement>("[data-preview-card]");
   /* The image is made here, not in the markup, so the page never ships an <img> without a src. */
@@ -450,7 +468,7 @@ const careerStops = site.experience
     const hide = () => card.removeAttribute("data-show");
     for (const link of document.querySelectorAll<HTMLAnchorElement>("a[data-preview]")) {
       link.addEventListener("pointerenter", () => {
-        const src = previewImage(link.href);
+        const src = link.dataset.preview!;
         if (shot.getAttribute("src") !== src) {
           card.removeAttribute("data-loaded");
           card.removeAttribute("data-failed");
