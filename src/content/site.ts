@@ -146,7 +146,7 @@ export const site = {
     pack: {
       open: "Meet the family",
       title: "Meet the family",
-      lede: "Dogs for daylight, cats for the mighty night. Each day of the week brings a new pair to the contact buttons, and switching between light and dark mode swaps them. Cute and funny GIFs make the internet a better place. Proudly millennial.",
+      lede: "Yup. Cute and silly animals make the internet a better place. Proudly millennial.",
       close: "Close",
       prev: "Previous GIF",
       next: "Next GIF",
