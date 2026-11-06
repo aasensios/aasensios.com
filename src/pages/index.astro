@@ -638,7 +638,10 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     sync();
   };
   document.querySelector("[data-pack-open]")?.addEventListener("click", () => {
-    openPack(WEEK.indexOf(Number(document.documentElement.dataset.day ?? 1)) * PER_DAY);
+    /* Today's first GIF in the current theme: each day runs day pet, then night pet. */
+    const root = document.documentElement;
+    const night = root.dataset.theme === "dark" ? 1 : 0;
+    openPack(WEEK.indexOf(Number(root.dataset.day ?? 1)) * PER_DAY + night);
   });
   /* #family-12 opens the gallery on that GIF, which is how a review picks up after a reload. */
   const deepLink = /^#family-(\d+)$/.exec(location.hash);
