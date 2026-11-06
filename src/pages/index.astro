@@ -75,13 +75,13 @@ const place = (e: (typeof site.experience)[number], i: number) =>
             src={avatar}
             alt=""
             width={56}
-            height={56}
+            height={70}
             densities={[1, 2]}
             loading="eager"
           />
         </button>
         <dialog class="portrait" aria-label={site.name} closedby="any" data-avatar-dialog>
-          <Image class="portrait-img" src={avatar} alt={site.name} width={256} height={256} />
+          <Image class="portrait-img" src={avatar} alt={site.name} width={256} height={320} densities={[1, 2]} />
           <form method="dialog">
             <button type="submit" class="portrait-close" aria-label={copy.avatar.close}>
               <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
@@ -886,14 +886,16 @@ const place = (e: (typeof site.experience)[number], i: number) =>
     align-items: center;
     gap: var(--space-4);
   }
+  /* A 4:5 portrait; the radii are 30% of the width on both axes, so the corners stay round. */
   .avatar {
     width: var(--avatar);
-    height: var(--avatar);
-    border-radius: 30%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    border-radius: 30% / 24%;
     corner-shape: squircle;
   }
   .avatar-open {
-    border-radius: 30%;
+    border-radius: 30% / 24%;
     corner-shape: squircle;
     cursor: zoom-in;
   }
@@ -919,9 +921,21 @@ const place = (e: (typeof site.experience)[number], i: number) =>
   .portrait-img {
     width: min(var(--portrait), calc(100vw - var(--space-10)));
     height: auto;
-    border-radius: 30%;
+    aspect-ratio: 4 / 5;
+    /* The same corners as the gallery dialog, so both pop-ups read as one family. */
+    border-radius: var(--radius-xl);
     corner-shape: squircle;
     cursor: zoom-out;
+  }
+  /* On phones the photo opens almost full screen, with a slim margin, and Close moves inside it. */
+  @media (max-width: 480px) {
+    .portrait-img {
+      width: calc(100vw - var(--space-6));
+    }
+    .portrait .portrait-close {
+      top: var(--space-3);
+      right: var(--space-3);
+    }
   }
   .portrait-close {
     position: absolute;
